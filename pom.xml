@@ -7,6 +7,8 @@
 		<lwjgl.version>3.2.1</lwjgl.version>
 		<joml.version>1.9.13</joml.version>
 		<lwjgl.natives>natives-linux</lwjgl.natives>
+		<maven.compile.source>1.8</maven.compile.source>
+	    <maven.compile.target>1.8</maven.compile.target>
 	</properties>
 
 	<dependencies>
