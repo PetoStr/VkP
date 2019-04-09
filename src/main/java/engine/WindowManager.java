@@ -4,9 +4,12 @@ import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFWVulkan.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
+import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWKeyCallback;
 import org.lwjgl.glfw.GLFWWindowSizeCallback;
+import org.lwjgl.vulkan.VkDebugReportCallbackEXT;
+import org.lwjgl.vulkan.VkInstance;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -36,6 +39,20 @@ public final class WindowManager {
 		}
 
 		GLFWErrorCallback.createPrint(System.err).set();
+		
+		PointerBuffer requiredExtensions = glfwGetRequiredInstanceExtensions();
+		if (requiredExtensions == null) {
+			throw new AssertionError("Failed to get required vulkan extensions");
+		}
+		
+		final VkInstance instance = VkBase.createInstance(requiredExtensions);
+		final VkDebugReportCallbackEXT debugCallback = new VkDebugReportCallbackEXT() {			
+			public int invoke(int flags, int objectType, long object, long location, int messageCode, long pLayerPrefix,
+					long pMessage, long pUserData) {
+				log.error(VkDebugReportCallbackEXT.getString(pMessage));
+				return 0;
+			}
+		};
 		
 		glfwDefaultWindowHints();
 		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
