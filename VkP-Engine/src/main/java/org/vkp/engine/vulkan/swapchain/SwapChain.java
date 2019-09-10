@@ -41,7 +41,6 @@ import static org.lwjgl.vulkan.VK10.VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 import static org.lwjgl.vulkan.VK10.VK_STRUCTURE_TYPE_SUBMIT_INFO;
 import static org.lwjgl.vulkan.VK10.vkAllocateCommandBuffers;
 import static org.lwjgl.vulkan.VK10.vkBeginCommandBuffer;
-import static org.lwjgl.vulkan.VK10.vkCmdEndRenderPass;
 import static org.lwjgl.vulkan.VK10.vkCreateFence;
 import static org.lwjgl.vulkan.VK10.vkCreateFramebuffer;
 import static org.lwjgl.vulkan.VK10.vkCreateSemaphore;
@@ -204,8 +203,6 @@ public class SwapChain {
 	}
 
 	public void submitFrame() {
-		vkCmdEndRenderPass(drawCommandBuffers[currentFrame]);
-
 		vkCheck(vkEndCommandBuffer(drawCommandBuffers[currentFrame]));
 
 		PointerBuffer pCommandBuffers = memAllocPointer(1);

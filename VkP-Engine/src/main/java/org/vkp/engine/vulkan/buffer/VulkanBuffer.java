@@ -92,14 +92,22 @@ public class VulkanBuffer {
 		vkCheck(vkBindBufferMemory(device, handle, memory, 0));
 	}
 
+	public void mapMemory(long size, PointerBuffer ppData) {
+		vkCheck(vkMapMemory(device, memory, 0, size, 0, ppData));
+	}
+
+	public void unmapMemory() {
+		vkUnmapMemory(device, memory);
+	}
+
 	public void copy(ByteBuffer data) {
 		PointerBuffer ppData = memAllocPointer(1);
 
-		vkCheck(vkMapMemory(device, memory, 0, data.capacity(), 0, ppData));
+		mapMemory(data.capacity(), ppData);
 
 		memCopy(memAddress(data), ppData.get(0), data.capacity());
 
-		vkUnmapMemory(device, memory);
+		unmapMemory();
 
 		memFree(ppData);
 	}

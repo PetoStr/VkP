@@ -4,13 +4,14 @@ import static org.lwjgl.system.MemoryUtil.memAlloc;
 import static org.lwjgl.system.MemoryUtil.memAllocLong;
 import static org.lwjgl.system.MemoryUtil.memFree;
 import static org.lwjgl.vulkan.VK10.VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+import static org.lwjgl.vulkan.VK10.VK_FORMAT_R32G32B32A32_SFLOAT;
+import static org.lwjgl.vulkan.VK10.VK_FORMAT_R32G32_SFLOAT;
 import static org.lwjgl.vulkan.VK10.VK_INDEX_TYPE_UINT32;
 import static org.lwjgl.vulkan.VK10.VK_PIPELINE_BIND_POINT_GRAPHICS;
+import static org.lwjgl.vulkan.VK10.VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 import static org.lwjgl.vulkan.VK10.VK_SHADER_STAGE_FRAGMENT_BIT;
 import static org.lwjgl.vulkan.VK10.VK_SHADER_STAGE_VERTEX_BIT;
-import static org.lwjgl.vulkan.VK10.VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-import static org.lwjgl.vulkan.VK10.VK_SUBPASS_CONTENTS_INLINE;
-import static org.lwjgl.vulkan.VK10.vkCmdBeginRenderPass;
+import static org.lwjgl.vulkan.VK10.VK_VERTEX_INPUT_RATE_VERTEX;
 import static org.lwjgl.vulkan.VK10.vkCmdBindDescriptorSets;
 import static org.lwjgl.vulkan.VK10.vkCmdBindIndexBuffer;
 import static org.lwjgl.vulkan.VK10.vkCmdBindPipeline;
@@ -24,19 +25,18 @@ import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
 
 import org.joml.Matrix4f;
-import org.lwjgl.vulkan.VkClearValue;
 import org.lwjgl.vulkan.VkCommandBuffer;
 import org.lwjgl.vulkan.VkDevice;
 import org.lwjgl.vulkan.VkExtent2D;
 import org.lwjgl.vulkan.VkOffset2D;
 import org.lwjgl.vulkan.VkPushConstantRange;
 import org.lwjgl.vulkan.VkRect2D;
-import org.lwjgl.vulkan.VkRenderPassBeginInfo;
+import org.lwjgl.vulkan.VkVertexInputAttributeDescription;
+import org.lwjgl.vulkan.VkVertexInputBindingDescription;
 import org.lwjgl.vulkan.VkViewport;
 import org.vkp.engine.VkBase;
 import org.vkp.engine.mesh.Mesh;
 import org.vkp.engine.model.Model;
-import org.vkp.engine.vulkan.RenderPass;
 import org.vkp.engine.vulkan.descriptor.DescriptorPool;
 import org.vkp.engine.vulkan.descriptor.DescriptorSetLayout;
 import org.vkp.engine.vulkan.pipeline.ShaderModule;
@@ -44,8 +44,12 @@ import org.vkp.engine.vulkan.pipeline.VulkanPipeline;
 import org.vkp.engine.vulkan.swapchain.SwapChain;
 
 import lombok.Data;
+import lombok.Getter;
 
 public class ShapeRenderer extends Renderer {
+
+	@Getter
+	private DescriptorSetLayout combinedImageSamplerLayout;
 
 	private VulkanPipeline graphicsPipeline;
 	private ShaderModule vertexShaderModule;
@@ -63,67 +67,20 @@ public class ShapeRenderer extends Renderer {
 
 		String vertexShaderPath = "shaders/shape.vert.spv";
 		String fragmentShaderPath = "shaders/shape.frag.spv";
-		LongBuffer layouts = memAllocLong(1);
-		layouts.put(combinedImageSamplerSetLayout.getHandle()).flip();
-		VkPushConstantRange.Buffer pushConstantRanges = VkPushConstantRange.calloc(1)
-				.stageFlags(VK_SHADER_STAGE_VERTEX_BIT)
-				.size(PushConstants.BYTES)
-				.offset(0);
-		createPipeline(layouts, pushConstantRanges, vertexShaderPath, fragmentShaderPath);
-		memFree(layouts);
-		pushConstantRanges.free();
+		createPipeline(vertexShaderPath, fragmentShaderPath);
 	}
 
 	@Override
-	public void recordCommands(VkCommandBuffer commandBuffer, Model model) {
-		recordPushConstants(commandBuffer, model);
+	public void begin() {
+		super.begin();
 
-		descriptorSets[0] = model.getTexture().getDescriptorSet().getHandle();
-
-		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-				graphicsPipeline.getPipelineLayout(), 0, descriptorSets, null);
-
-		recordDrawMesh(commandBuffer, model.getMesh());
-	}
-
-	@Override
-	public void cleanup() {
-		super.cleanup();
-		descriptorPool.cleanup();
-		graphicsPipeline.cleanup();
-		fragmentShaderModule.cleanup();
-		vertexShaderModule.cleanup();
-	}
-
-	protected void beginRecord(VkCommandBuffer commandBuffer) {
 		SwapChain swapChain = vkBase.getSwapChain();
 		VkExtent2D extent = swapChain.getExtent();
-		RenderPass renderPass = vkBase.getRenderPass();
-
 		VkOffset2D offset = VkOffset2D.calloc()
 				.x(0)
 				.y(0);
-		VkRect2D renderArea = VkRect2D.calloc()
-				.offset(offset)
-				.extent(extent);
-		VkClearValue.Buffer clearValues = VkClearValue.calloc(2);
-		clearValues.get(0).color()
-				.float32(0, 0.0f)
-				.float32(1, 0.1f)
-				.float32(2, 0.0f)
-				.float32(3, 1.0f);
-		clearValues.get(1).depthStencil()
-				.set(1.0f, 0);
 
-		VkRenderPassBeginInfo renderPassBeginInfo = VkRenderPassBeginInfo.calloc()
-				.sType(VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO)
-				.renderPass(renderPass.getHandle())
-				.framebuffer(swapChain.getCurrentImageFrameBuffer())
-				.renderArea(renderArea)
-				.pClearValues(clearValues);
-		vkCmdBeginRenderPass(commandBuffer, renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+		vkCmdBindPipeline(currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
 				graphicsPipeline.getHandle());
 
 		VkViewport.Buffer viewport = VkViewport.calloc(1)
@@ -131,40 +88,59 @@ public class ShapeRenderer extends Renderer {
 				.height(extent.height())
 				.minDepth(0.0f)
 				.maxDepth(1.0f);
-		vkCmdSetViewport(commandBuffer, 0, viewport);
+		vkCmdSetViewport(currentCommandBuffer, 0, viewport);
 
 		VkRect2D.Buffer scissor = VkRect2D.calloc(1)
 				.offset(offset)
 				.extent(extent);
-		vkCmdSetScissor(commandBuffer, 0, scissor);
+		vkCmdSetScissor(currentCommandBuffer, 0, scissor);
 
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+		vkCmdBindPipeline(currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
 				graphicsPipeline.getHandle());
 
 		descriptorSets = new long[1];
 
 		scissor.free();
 		viewport.free();
-		renderPassBeginInfo.free();
-		clearValues.free();
-		renderArea.free();
 		offset.free();
 	}
 
+	public void recordCommands(Model model) {
+		recordPushConstants(currentCommandBuffer, model);
+
+		descriptorSets[0] = model.getTexture().getDescriptorSet().getHandle();
+
+		vkCmdBindDescriptorSets(currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+				graphicsPipeline.getPipelineLayout(), 0, descriptorSets, null);
+
+		recordDrawMesh(currentCommandBuffer, model.getMesh());
+	}
+
+	@Override
+	public void cleanup() {
+		super.cleanup();
+		combinedImageSamplerLayout.cleanup();
+		graphicsPipeline.cleanup();
+		fragmentShaderModule.cleanup();
+		vertexShaderModule.cleanup();
+	}
+
+	@Override
+	protected void createDescriptorSetLayouts() {
+		VkDevice device = vkBase.getDevice().getHandle();
+
+		combinedImageSamplerLayout = new DescriptorSetLayout(device, 1);
+		combinedImageSamplerLayout.addLayoutBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+				VK_SHADER_STAGE_FRAGMENT_BIT);
+		combinedImageSamplerLayout.createDescriptorSetLayout();
+	}
+
+	@Override
 	protected void createDescriptorPool() {
 		VkDevice device = vkBase.getDevice().getHandle();
 		descriptorPool = new DescriptorPool(device, 5); // XXX: hard coded
 		descriptorPool.addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 5);
 		descriptorPool.createDescriptorPool(5);
-	}
-
-	protected void createDescriptorSetLayouts() {
-		VkDevice device = vkBase.getDevice().getHandle();
-
-		combinedImageSamplerSetLayout = new DescriptorSetLayout(device, 1);
-		combinedImageSamplerSetLayout.addLayoutBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-				VK_SHADER_STAGE_FRAGMENT_BIT);
-		combinedImageSamplerSetLayout.createDescriptorSetLayout();
 	}
 
 	private void recordDrawMesh(VkCommandBuffer commandBuffer, Mesh mesh) {
@@ -200,11 +176,33 @@ public class ShapeRenderer extends Renderer {
 				   VK_SHADER_STAGE_VERTEX_BIT, 0, pPushConstants);
 	}
 
-	private void createPipeline(LongBuffer descriptorSetLayouts,
-								VkPushConstantRange.Buffer pushConstatnRanges,
-								String vertexShaderPath,
-								String fragmentShaderPath) {
+	private void createPipeline(String vertexShaderPath, String fragmentShaderPath) {
 		VkDevice device = vkBase.getDevice().getHandle();
+
+		LongBuffer layouts = memAllocLong(1);
+		layouts.put(combinedImageSamplerLayout.getHandle()).flip();
+		VkPushConstantRange.Buffer pushConstantRanges = VkPushConstantRange.calloc(1)
+				.stageFlags(VK_SHADER_STAGE_VERTEX_BIT)
+				.size(PushConstants.BYTES)
+				.offset(0);
+
+		VkVertexInputBindingDescription.Buffer bindingDescriptions = VkVertexInputBindingDescription.calloc(1);
+		bindingDescriptions.get(0)
+				.binding(0)
+				.stride(Float.BYTES * 6)
+				.inputRate(VK_VERTEX_INPUT_RATE_VERTEX);
+		VkVertexInputAttributeDescription.Buffer attributeDescriptions = VkVertexInputAttributeDescription.calloc(2);
+		attributeDescriptions.get(0)
+				.location(0)
+				.binding(bindingDescriptions.get(0).binding())
+				.format(VK_FORMAT_R32G32B32A32_SFLOAT)
+				.offset(0);
+		attributeDescriptions.get(1)
+				.location(1)
+				.binding(bindingDescriptions.get(0).binding())
+				.format(VK_FORMAT_R32G32_SFLOAT)
+				.offset(Float.BYTES * 4);
+
 		vertexShaderModule = new ShaderModule(device, vertexShaderPath,
 				VK_SHADER_STAGE_VERTEX_BIT);
 		fragmentShaderModule = new ShaderModule(device, fragmentShaderPath,
@@ -212,8 +210,17 @@ public class ShapeRenderer extends Renderer {
 		graphicsPipeline = new VulkanPipeline(device, 2);
 		graphicsPipeline.addShaderModule(vertexShaderModule);
 		graphicsPipeline.addShaderModule(fragmentShaderModule);
-		graphicsPipeline.createPipelineLayout(descriptorSetLayouts, pushConstatnRanges);
-		graphicsPipeline.createPipeline(vkBase.getRenderPass());
+		graphicsPipeline.setBindingDescriptions(bindingDescriptions);
+		graphicsPipeline.setAttributeDescriptions(attributeDescriptions);
+		graphicsPipeline.createPipelineLayout(layouts, pushConstantRanges);
+		graphicsPipeline.createPipeline(vkBase.getRenderPass(),
+				VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+
+		attributeDescriptions.free();
+		bindingDescriptions.free();
+
+		memFree(layouts);
+		pushConstantRanges.free();
 	}
 
 	@Data

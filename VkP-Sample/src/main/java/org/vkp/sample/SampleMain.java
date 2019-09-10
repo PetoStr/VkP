@@ -8,8 +8,8 @@ import org.vkp.engine.VkBase;
 import org.vkp.engine.model.Model;
 import org.vkp.engine.model.ShapeLoader;
 import org.vkp.engine.model.ShapeType;
-import org.vkp.engine.renderer.Renderer;
 import org.vkp.engine.renderer.ShapeRenderer;
+import org.vkp.engine.renderer.TextRenderer;
 import org.vkp.engine.texture.Color;
 import org.vkp.engine.window.Window;
 
@@ -20,7 +20,8 @@ public class SampleMain {
 
 	private Window window;
 
-	private Renderer shapeRenderer;
+	private ShapeRenderer shapeRenderer;
+	private TextRenderer textRenderer;
 
 	private VkBase vkBase;
 
@@ -30,6 +31,9 @@ public class SampleMain {
 	private Block blockB;
 	private Block wall;
 
+	private Block listenCollisionBlock;
+
+	private int fps;
 	private int collisions;
 
 	public void start() {
@@ -42,6 +46,9 @@ public class SampleMain {
 		shapeRenderer = new ShapeRenderer(vkBase);
 		shapeRenderer.init();
 
+		textRenderer = new TextRenderer(vkBase);
+		textRenderer.init();
+
 		createBlocks();
 
 		window.show();
@@ -50,6 +57,7 @@ public class SampleMain {
 
 		vkBase.waitDevice();
 
+		textRenderer.cleanup();
 		shapeRenderer.cleanup();
 		vkBase.cleanup();
 		window.destroyWindow();
@@ -82,6 +90,8 @@ public class SampleMain {
 		wall = new Block(modelWall, Float.POSITIVE_INFINITY, 0.0f);
 		wall.setX(modelWall.getPosition().x);
 		blocks.add(wall);
+
+		listenCollisionBlock = blockB;
 	}
 
 	private void loop() {
@@ -106,32 +116,49 @@ public class SampleMain {
 				}
 			}
 
-			if (!shapeRenderer.beginRecord()) {
+			if (!vkBase.beginFrame()) {
 				continue;
 			}
-			for (Block block : blocks) {
-				shapeRenderer.recordDraw(block.getModel());
-			}
-			shapeRenderer.endRecord();
 
+			shapeRenderer.begin();
+			for (Block block : blocks) {
+				shapeRenderer.recordCommands(block.getModel());
+			}
+			shapeRenderer.end();
+
+			textRenderer.begin();
+			textRenderer.addText("FPS: " + fps, -1.0f, -1.0f, 0.5f);
+			textRenderer.addText("Collisions: " + collisions, -0.2f, -1.0f, 0.5f);
+			textRenderer.addText(blockA.getMass() + " kg", -1.0f, -0.9f, 0.5f);
+			textRenderer.addText(String.valueOf(blockA.getSpeed()), -1.0f, -0.8f, 0.5f);
+			textRenderer.addText(blockB.getMass() + " kg", 0.4f, -0.9f, 0.5f);
+			textRenderer.addText(String.valueOf(blockB.getSpeed()), 0.4f, -0.8f, 0.5f);
+			textRenderer.addText("TEST", 0.0f, 0.0f, 1.0f);
+			textRenderer.end();
+
+			vkBase.submitFrame();
 			frames++;
-			if (now - startTime >= 1e9) {
-				log.info("FPS: " + frames);
+			long diffTime = now - startTime;
+			if (diffTime >= 1e9) {
+				fps = (int) ((float) frames * (1e9 / diffTime));
 				frames = 0;
-				startTime = now;
+				startTime = System.nanoTime();
 			}
 		}
 	}
 
 	private boolean handleCollision() {
-		if (blockA.intersects(wall)) {
+		if (listenCollisionBlock.equals(wall) && blockA.intersects(wall)) {
 			blockA.setSpeed(Math.abs(blockA.getSpeed()));
 			double dist = Math.abs(blockA.getX() - wall.getX() - wall.getModel().getWidth());
 			blockA.setX(wall.getX() + wall.getModel().getWidth() + dist);
+
+			listenCollisionBlock = blockB;
+
 			return true;
 		}
 
-		if (!blockA.intersects(blockB)) {
+		if (!listenCollisionBlock.equals(blockB) || !blockA.intersects(blockB)) {
 			return false;
 		}
 
@@ -145,6 +172,8 @@ public class SampleMain {
 
 		blockA.setSpeed(nv1);
 		blockB.setSpeed(nv2);
+
+		listenCollisionBlock = wall;
 
 		return true;
 	}

@@ -3,13 +3,23 @@ package org.vkp.engine;
 import static org.lwjgl.glfw.GLFWVulkan.glfwCreateWindowSurface;
 import static org.lwjgl.system.MemoryUtil.memAllocLong;
 import static org.lwjgl.system.MemoryUtil.memFree;
+import static org.lwjgl.vulkan.VK10.VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+import static org.lwjgl.vulkan.VK10.VK_SUBPASS_CONTENTS_INLINE;
+import static org.lwjgl.vulkan.VK10.vkCmdBeginRenderPass;
+import static org.lwjgl.vulkan.VK10.vkCmdEndRenderPass;
 import static org.lwjgl.vulkan.VK10.vkDeviceWaitIdle;
 import static org.vkp.engine.vulkan.VkUtil.vkCheck;
 
 import java.nio.LongBuffer;
 
+import org.lwjgl.vulkan.VkClearValue;
 import org.lwjgl.vulkan.VkCommandBuffer;
+import org.lwjgl.vulkan.VkExtent2D;
+import org.lwjgl.vulkan.VkOffset2D;
+import org.lwjgl.vulkan.VkRect2D;
+import org.lwjgl.vulkan.VkRenderPassBeginInfo;
 import org.vkp.engine.model.ShapeLoader;
+import org.vkp.engine.texture.TextureLoader;
 import org.vkp.engine.vulkan.RenderPass;
 import org.vkp.engine.vulkan.VulkanInstance;
 import org.vkp.engine.vulkan.buffer.BufferCreator;
@@ -43,6 +53,8 @@ public class VkBase {
 
 	private ImageCreator imageCreator;
 
+	private TextureLoader textureLoader;
+
 	private ShapeLoader modelLoader;
 
 	public void init(Window window) {
@@ -65,8 +77,53 @@ public class VkBase {
 		bufferCreator = new BufferCreator(device.getHandle(), physicalDevice.getMemoryProperties());
 		imageCreator = new ImageCreator(device.getHandle(), physicalDevice.getMemoryProperties());
 
-		modelLoader = new ShapeLoader(device.getHandle(), stagingBufferCommand,
-				bufferCreator, imageCreator);
+		textureLoader = new TextureLoader(device.getHandle(), stagingBufferCommand, imageCreator);
+
+		modelLoader = new ShapeLoader(stagingBufferCommand, bufferCreator, textureLoader);
+	}
+
+	public boolean beginFrame() {
+		if (!swapChain.beginFrame()) {
+			return false;
+		}
+
+		VkCommandBuffer currentCommandBuffer = swapChain.getCurrentFrameCommandBuffer();
+
+		VkExtent2D extent = swapChain.getExtent();
+
+		VkOffset2D offset = VkOffset2D.calloc()
+				.x(0)
+				.y(0);
+		VkRect2D renderArea = VkRect2D.calloc()
+				.offset(offset)
+				.extent(extent);
+		VkClearValue.Buffer clearValues = VkClearValue.calloc(2);
+		clearValues.get(0).color()
+				.float32(0, 0.0f)
+				.float32(1, 0.1f)
+				.float32(2, 0.0f)
+				.float32(3, 1.0f);
+		clearValues.get(1).depthStencil()
+				.set(1.0f, 0);
+
+		VkRenderPassBeginInfo renderPassBeginInfo = VkRenderPassBeginInfo.calloc()
+				.sType(VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO)
+				.renderPass(renderPass.getHandle())
+				.framebuffer(swapChain.getCurrentImageFrameBuffer())
+				.renderArea(renderArea)
+				.pClearValues(clearValues);
+		vkCmdBeginRenderPass(currentCommandBuffer, renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+		renderPassBeginInfo.free();
+		clearValues.free();
+		renderArea.free();
+
+		return true;
+	}
+
+	public void submitFrame() {
+		vkCmdEndRenderPass(swapChain.getCurrentFrameCommandBuffer());
+		swapChain.submitFrame();
 	}
 
 	public void waitDevice() {
@@ -75,6 +132,7 @@ public class VkBase {
 
 	public void cleanup() {
 		modelLoader.cleanup();
+		textureLoader.cleanup();
 		renderPass.cleanup();
 		swapChain.cleanup();
 		device.cleanup();
