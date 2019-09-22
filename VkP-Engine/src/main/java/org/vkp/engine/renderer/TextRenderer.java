@@ -28,6 +28,7 @@ import java.nio.LongBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.joml.Vector2f;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.vulkan.VkDevice;
 import org.lwjgl.vulkan.VkExtent2D;
@@ -40,6 +41,7 @@ import org.vkp.engine.Config;
 import org.vkp.engine.VkBase;
 import org.vkp.engine.font.FntParser;
 import org.vkp.engine.font.Glyph;
+import org.vkp.engine.font.Text;
 import org.vkp.engine.texture.Texture;
 import org.vkp.engine.vulkan.buffer.VulkanBuffer;
 import org.vkp.engine.vulkan.descriptor.DescriptorPool;
@@ -98,20 +100,23 @@ public class TextRenderer extends Renderer {
 		vertexData[currentFrame].vertexBuffer.mapMemory(size, vertexData[currentFrame].data);
 	}
 
-	public void addText(String text, float x, float y, float scale) {
+	public void addText(Text text) {
 		FloatBuffer data = memAllocFloat(16);
 
 		VkExtent2D extent = vkBase.getSwapChain().getExtent();
 		float ratio = (float) extent.width() / extent.height();
 
-		for (Character character : text.toCharArray()) {
+		float x = text.getPosition().x;
+		float y = text.getPosition().y;
+		char[] characters = text.getValue().toCharArray();
+		for (Character character : characters) {
 			Glyph glyph = glyphs.get(character);
 
-			float w = (float) glyph.getWidth() / 512 * scale;
-			float h = (float) glyph.getHeight() / 512 * scale;
+			float w = (float) glyph.getWidth() / 512 * text.getScale();
+			float h = (float) glyph.getHeight() / 512 * text.getScale();
 
-			float x0 = x + (float) glyph.getXOffset() / 512 * scale / ratio;
-			float y0 = y + (float) glyph.getYOffset() / 512 * scale;
+			float x0 = x + (float) glyph.getXOffset() / 512 * text.getScale() / ratio;
+			float y0 = y + (float) glyph.getYOffset() / 512 * text.getScale();
 			float x1 = x0 + w / ratio;
 			float y1 = y0 + h;
 			float s0 = (float) glyph.getX() / 512;
@@ -142,12 +147,16 @@ public class TextRenderer extends Renderer {
 			memCopy(memAddress(data),
 					vertexData[currentFrame].data.get(0) + characterCount * 64, 64);
 
-			x += (float) glyph.getXAdvance() / 512 / ratio * scale;
+			x += (float) glyph.getXAdvance() / 512 / ratio * text.getScale();
 
 			characterCount++;
 		}
 
 		memFree(data);
+	}
+
+	public void addText(String text, float x, float y, float scale) {
+		addText(new Text(text, new Vector2f(x, y), scale));
 	}
 
 	@Override

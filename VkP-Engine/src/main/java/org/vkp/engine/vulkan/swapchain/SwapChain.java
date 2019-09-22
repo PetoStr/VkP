@@ -475,7 +475,8 @@ public class SwapChain {
 		formatProperties.free();
 
 		if (pickedFormat == VK_FORMAT_UNDEFINED) {
-			throw new AssertionError("Supported format not found");
+			pickedFormat = VK_FORMAT_D32_SFLOAT_S8_UINT;
+			//throw new AssertionError("Supported format not found");
 		}
 
 		return pickedFormat;

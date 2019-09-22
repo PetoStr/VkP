@@ -1,7 +1,4 @@
-package org.vkp.engine.texture;
-
-import static org.lwjgl.system.MemoryUtil.memAllocLong;
-import static org.lwjgl.system.MemoryUtil.memFree;
+package org.vkp.engine.loader;
 
 import java.nio.LongBuffer;
 import java.util.ArrayList;
@@ -10,10 +7,15 @@ import java.util.List;
 import java.util.Map;
 
 import org.lwjgl.vulkan.VkDevice;
+import org.vkp.engine.texture.Color;
+import org.vkp.engine.texture.Texture;
 import org.vkp.engine.vulkan.command.StagingBufferCommand;
 import org.vkp.engine.vulkan.descriptor.DescriptorSet;
 import org.vkp.engine.vulkan.descriptor.DescriptorSetLayout;
 import org.vkp.engine.vulkan.image.ImageCreator;
+
+import static org.lwjgl.system.MemoryUtil.memAllocLong;
+import static org.lwjgl.system.MemoryUtil.memFree;
 
 public class TextureLoader {
 

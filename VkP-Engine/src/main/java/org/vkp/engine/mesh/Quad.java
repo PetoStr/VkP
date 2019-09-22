@@ -10,9 +10,9 @@ import java.nio.IntBuffer;
 import org.vkp.engine.vulkan.buffer.BufferCreator;
 import org.vkp.engine.vulkan.command.StagingBufferCommand;
 
-public class RectangleMesh extends Mesh {
+public class Quad extends Mesh {
 
-	public RectangleMesh(BufferCreator bufferCreator, StagingBufferCommand stagingBufferCommand) {
+	public Quad(BufferCreator bufferCreator, StagingBufferCommand stagingBufferCommand) {
 		super(bufferCreator, stagingBufferCommand);
 
 		ByteBuffer vertexData = memAlloc(6 * 4 * 4);

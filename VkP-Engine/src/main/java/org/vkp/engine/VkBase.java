@@ -18,8 +18,10 @@ import org.lwjgl.vulkan.VkExtent2D;
 import org.lwjgl.vulkan.VkOffset2D;
 import org.lwjgl.vulkan.VkRect2D;
 import org.lwjgl.vulkan.VkRenderPassBeginInfo;
-import org.vkp.engine.model.ShapeLoader;
-import org.vkp.engine.texture.TextureLoader;
+import org.vkp.engine.loader.ShapeLoader;
+import org.vkp.engine.loader.TextureLoader;
+import org.vkp.engine.renderer.ShapeRenderer;
+import org.vkp.engine.renderer.TextRenderer;
 import org.vkp.engine.vulkan.RenderPass;
 import org.vkp.engine.vulkan.VulkanInstance;
 import org.vkp.engine.vulkan.buffer.BufferCreator;
@@ -55,7 +57,11 @@ public class VkBase {
 
 	private TextureLoader textureLoader;
 
-	private ShapeLoader modelLoader;
+	private ShapeRenderer shapeRenderer;
+
+	private TextRenderer textRenderer;
+
+	private ShapeLoader shapeLoader;
 
 	public void init(Window window) {
 		instance = new VulkanInstance(window.getRequiredExtensions());
@@ -79,7 +85,13 @@ public class VkBase {
 
 		textureLoader = new TextureLoader(device.getHandle(), stagingBufferCommand, imageCreator);
 
-		modelLoader = new ShapeLoader(stagingBufferCommand, bufferCreator, textureLoader);
+		shapeRenderer = new ShapeRenderer(this);
+		shapeRenderer.init();
+		textRenderer = new TextRenderer(this);
+		textRenderer.init();
+
+		shapeLoader = new ShapeLoader(stagingBufferCommand, shapeRenderer,
+				bufferCreator, textureLoader);
 	}
 
 	public boolean beginFrame() {
@@ -131,7 +143,7 @@ public class VkBase {
 	}
 
 	public void cleanup() {
-		modelLoader.cleanup();
+		shapeLoader.cleanup();
 		textureLoader.cleanup();
 		renderPass.cleanup();
 		swapChain.cleanup();

@@ -10,11 +10,11 @@ out gl_PerVertex {
 layout(location = 0) out vec2 frag_uv;
 
 layout (std140, push_constant) uniform push_constants {
-	mat4 mp_matrix;
+	mat4 mvp_matrix;
 } push_consts;
 
 void main(void)
 {
-	gl_Position = push_consts.mp_matrix * in_pos;
+	gl_Position = push_consts.mvp_matrix * in_pos;
 	frag_uv = in_uv;
 }

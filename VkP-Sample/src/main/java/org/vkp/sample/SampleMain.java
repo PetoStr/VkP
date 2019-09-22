@@ -3,11 +3,14 @@ package org.vkp.sample;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.joml.Vector3f;
+import org.joml.Matrix4f;
+import org.joml.Vector2d;
+import org.lwjgl.vulkan.VkExtent2D;
+import org.vkp.engine.Camera;
 import org.vkp.engine.VkBase;
-import org.vkp.engine.model.Model;
-import org.vkp.engine.model.ShapeLoader;
-import org.vkp.engine.model.ShapeType;
+import org.vkp.engine.loader.ShapeLoader;
+import org.vkp.engine.loader.ShapeType;
+import org.vkp.engine.mesh.TexturedMesh;
 import org.vkp.engine.renderer.ShapeRenderer;
 import org.vkp.engine.renderer.TextRenderer;
 import org.vkp.engine.texture.Color;
@@ -17,6 +20,8 @@ import lombok.extern.log4j.Log4j2;
 
 @Log4j2
 public class SampleMain {
+
+	private static final double MS_PER_UPDATE = 0.001d;
 
 	private Window window;
 
@@ -33,8 +38,10 @@ public class SampleMain {
 
 	private Block listenCollisionBlock;
 
+	private Camera camera;
+
 	private int fps;
-	private int collisions;
+	private long collisions;
 
 	public void start() {
 		window = new Window();
@@ -43,11 +50,11 @@ public class SampleMain {
 		vkBase = new VkBase();
 		vkBase.init(window);
 
-		shapeRenderer = new ShapeRenderer(vkBase);
-		shapeRenderer.init();
+		shapeRenderer = vkBase.getShapeRenderer();
 
-		textRenderer = new TextRenderer(vkBase);
-		textRenderer.init();
+		textRenderer = vkBase.getTextRenderer();
+
+		camera = new Camera();
 
 		createBlocks();
 
@@ -64,31 +71,24 @@ public class SampleMain {
 	}
 
 	private void createBlocks() {
-		ShapeLoader modelLoader = vkBase.getModelLoader();
+		ShapeLoader shapeLoader = vkBase.getShapeLoader();
 
-		float ratio = (float) window.getWidth() / window.getHeight();
-
-		Model modelA = modelLoader.load(ShapeType.RECTANGLE, "images/grass.png", shapeRenderer);
-		modelA.setPosition(new Vector3f(0.0f, 0.1f, 0.0f));
-		modelA.setWidth(0.8f);
-		modelA.setHeight(0.8f);
-		blockA = new Block(modelA, 1.0f, 0.0f);
-		blockA.setX(modelA.getPosition().x);
+		TexturedMesh shapeA = shapeLoader.load(ShapeType.QUAD, "images/grass.png");
+		Vector2d blockAPos = new Vector2d(window.getWidth() / 2.0f, window.getHeight() / 2.0f);
+		blockA = new Block(shapeA, blockAPos, 320.0f, 320.0f, 1.0f, 0.0f);
 		blocks.add(blockA);
 
-		Model modelB = modelLoader.load(ShapeType.RECTANGLE, "images/texture.png", shapeRenderer);
-		modelB.setPosition(new Vector3f(1.1f, 0.0f, 0.0f));
-		blockB = new Block(modelB, 100e4, -0.5f);
-		blockB.setX(modelB.getPosition().x);
+		TexturedMesh shapeB = shapeLoader.load(ShapeType.QUAD, "images/texture.png");
+		Vector2d blockBPos = new Vector2d(window.getWidth() * (5.0f / 6.0f),
+				window.getHeight() / 2.0f - 20.0f);
+		blockB = new Block(shapeB, blockBPos, 360.0f, 360.0f, 100e8, -0.0001f);
 		blocks.add(blockB);
 
 		Color color = new Color((byte) 255, (byte) 255, (byte) 255, (byte) 255);
-		Model modelWall = modelLoader.load(ShapeType.RECTANGLE, color, shapeRenderer);
-		modelWall.setPosition(new Vector3f(-ratio / 1.2f, 0.0f, 0.0f));
-		modelWall.setWidth(0.1f);
-		modelWall.setHeight(1.0f);
-		wall = new Block(modelWall, Float.POSITIVE_INFINITY, 0.0f);
-		wall.setX(modelWall.getPosition().x);
+		TexturedMesh shapeWall = shapeLoader.load(ShapeType.QUAD, color);
+		Vector2d wallPos = new Vector2d(window.getWidth() * (1.0f / 10.0f),
+				window.getHeight() / 2.0f - 40.0f);
+		wall = new Block(shapeWall, wallPos, 40.0f, 400.0f, Float.POSITIVE_INFINITY, 0.0f);
 		blocks.add(wall);
 
 		listenCollisionBlock = blockB;
@@ -98,31 +98,39 @@ public class SampleMain {
 		int frames = 0;
 		long frameStartTime = System.nanoTime();
 		long startTime = System.nanoTime();
+		double lag = 0.0d;
 		while (!window.shouldClose()) {
 			long now = System.nanoTime();
-			double frameTime = (now - frameStartTime) / 1e9;
+			double frameTime = (now - frameStartTime) / 1e6;
+			lag += frameTime;
 			frameStartTime = now;
 
 			window.update();
-			final int parts = 10000;
-			double partFrameTime = frameTime / parts;
-			for (int i = 0; i < parts; i++) {
+			while (lag >= MS_PER_UPDATE) {
 				if (handleCollision()) {
 					collisions++;
-					log.info("Collision count: " + collisions);
 				}
 				for (Block block : blocks) {
-					block.update(partFrameTime);
+					block.update();
 				}
+
+				lag -= MS_PER_UPDATE;
 			}
+			camera.update();
 
 			if (!vkBase.beginFrame()) {
 				continue;
 			}
 
+
+			VkExtent2D extent = vkBase.getSwapChain().getExtent();
+			ShapeRenderer.PushConstants constants = new ShapeRenderer.PushConstants();
+			constants.pMatrix = new Matrix4f().ortho2D(0.0f, extent.width(), 0.0f, extent.height());
+			constants.vMatrix = camera.getViewMatrix();
 			shapeRenderer.begin();
 			for (Block block : blocks) {
-				shapeRenderer.recordCommands(block.getModel());
+				constants.mMatrix = block.calculateModelMatrix();
+				shapeRenderer.recordCommands(block.getTexturedMesh(), constants);
 			}
 			shapeRenderer.end();
 
@@ -133,7 +141,6 @@ public class SampleMain {
 			textRenderer.addText(String.valueOf(blockA.getSpeed()), -1.0f, -0.8f, 0.5f);
 			textRenderer.addText(blockB.getMass() + " kg", 0.4f, -0.9f, 0.5f);
 			textRenderer.addText(String.valueOf(blockB.getSpeed()), 0.4f, -0.8f, 0.5f);
-			textRenderer.addText("TEST", 0.0f, 0.0f, 1.0f);
 			textRenderer.end();
 
 			vkBase.submitFrame();
@@ -150,8 +157,9 @@ public class SampleMain {
 	private boolean handleCollision() {
 		if (listenCollisionBlock.equals(wall) && blockA.intersects(wall)) {
 			blockA.setSpeed(Math.abs(blockA.getSpeed()));
-			double dist = Math.abs(blockA.getX() - wall.getX() - wall.getModel().getWidth());
-			blockA.setX(wall.getX() + wall.getModel().getWidth() + dist);
+			double dist = Math.abs(blockA.getPosition().x - wall.getPosition().x - wall.getWidth());
+			blockA.setPosition(new Vector2d(wall.getPosition().x + wall.getWidth() + dist,
+					blockA.getPosition().y));
 
 			listenCollisionBlock = blockB;
 

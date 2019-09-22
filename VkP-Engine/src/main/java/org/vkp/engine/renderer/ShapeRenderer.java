@@ -1,8 +1,27 @@
 package org.vkp.engine.renderer;
 
-import static org.lwjgl.system.MemoryUtil.memAlloc;
-import static org.lwjgl.system.MemoryUtil.memAllocLong;
-import static org.lwjgl.system.MemoryUtil.memFree;
+import java.nio.ByteBuffer;
+import java.nio.LongBuffer;
+
+import org.joml.Matrix4f;
+import org.lwjgl.vulkan.VkCommandBuffer;
+import org.lwjgl.vulkan.VkDevice;
+import org.lwjgl.vulkan.VkExtent2D;
+import org.lwjgl.vulkan.VkOffset2D;
+import org.lwjgl.vulkan.VkPushConstantRange;
+import org.lwjgl.vulkan.VkRect2D;
+import org.lwjgl.vulkan.VkVertexInputAttributeDescription;
+import org.lwjgl.vulkan.VkVertexInputBindingDescription;
+import org.lwjgl.vulkan.VkViewport;
+import org.vkp.engine.VkBase;
+import org.vkp.engine.mesh.Mesh;
+import org.vkp.engine.mesh.TexturedMesh;
+import org.vkp.engine.vulkan.descriptor.DescriptorPool;
+import org.vkp.engine.vulkan.descriptor.DescriptorSetLayout;
+import org.vkp.engine.vulkan.pipeline.ShaderModule;
+import org.vkp.engine.vulkan.pipeline.VulkanPipeline;
+import org.vkp.engine.vulkan.swapchain.SwapChain;
+
 import static org.lwjgl.vulkan.VK10.VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 import static org.lwjgl.vulkan.VK10.VK_FORMAT_R32G32B32A32_SFLOAT;
 import static org.lwjgl.vulkan.VK10.VK_FORMAT_R32G32_SFLOAT;
@@ -21,29 +40,10 @@ import static org.lwjgl.vulkan.VK10.vkCmdPushConstants;
 import static org.lwjgl.vulkan.VK10.vkCmdSetScissor;
 import static org.lwjgl.vulkan.VK10.vkCmdSetViewport;
 
-import java.nio.ByteBuffer;
-import java.nio.LongBuffer;
+import static org.lwjgl.system.MemoryUtil.memAlloc;
+import static org.lwjgl.system.MemoryUtil.memAllocLong;
+import static org.lwjgl.system.MemoryUtil.memFree;
 
-import org.joml.Matrix4f;
-import org.lwjgl.vulkan.VkCommandBuffer;
-import org.lwjgl.vulkan.VkDevice;
-import org.lwjgl.vulkan.VkExtent2D;
-import org.lwjgl.vulkan.VkOffset2D;
-import org.lwjgl.vulkan.VkPushConstantRange;
-import org.lwjgl.vulkan.VkRect2D;
-import org.lwjgl.vulkan.VkVertexInputAttributeDescription;
-import org.lwjgl.vulkan.VkVertexInputBindingDescription;
-import org.lwjgl.vulkan.VkViewport;
-import org.vkp.engine.VkBase;
-import org.vkp.engine.mesh.Mesh;
-import org.vkp.engine.model.Model;
-import org.vkp.engine.vulkan.descriptor.DescriptorPool;
-import org.vkp.engine.vulkan.descriptor.DescriptorSetLayout;
-import org.vkp.engine.vulkan.pipeline.ShaderModule;
-import org.vkp.engine.vulkan.pipeline.VulkanPipeline;
-import org.vkp.engine.vulkan.swapchain.SwapChain;
-
-import lombok.Data;
 import lombok.Getter;
 
 public class ShapeRenderer extends Renderer {
@@ -56,6 +56,16 @@ public class ShapeRenderer extends Renderer {
 	private ShaderModule fragmentShaderModule;
 
 	private long[] descriptorSets;
+
+	public static class PushConstants {
+
+		public static final int BYTES = 16 * 4;
+
+		public Matrix4f mMatrix;
+		public Matrix4f vMatrix;
+		public Matrix4f pMatrix;
+
+	}
 
 	public ShapeRenderer(VkBase vkBase) {
 		super(vkBase);
@@ -105,15 +115,15 @@ public class ShapeRenderer extends Renderer {
 		offset.free();
 	}
 
-	public void recordCommands(Model model) {
-		recordPushConstants(currentCommandBuffer, model);
+	public void recordCommands(TexturedMesh texturedMesh, PushConstants constants) {
+		recordPushConstants(currentCommandBuffer, constants);
 
-		descriptorSets[0] = model.getTexture().getDescriptorSet().getHandle();
+		descriptorSets[0] = texturedMesh.getTexture().getDescriptorSet().getHandle();
 
 		vkCmdBindDescriptorSets(currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
 				graphicsPipeline.getPipelineLayout(), 0, descriptorSets, null);
 
-		recordDrawMesh(currentCommandBuffer, model.getMesh());
+		recordDrawMesh(currentCommandBuffer, texturedMesh.getMesh());
 	}
 
 	@Override
@@ -159,17 +169,12 @@ public class ShapeRenderer extends Renderer {
 		memFree(offsets);
 	}
 
-	private void recordPushConstants(VkCommandBuffer commandBuffer, Model model) {
+	private void recordPushConstants(VkCommandBuffer commandBuffer, PushConstants constants) {
 		ByteBuffer pPushConstants = memAlloc(PushConstants.BYTES);
-		SwapChain swapChain = vkBase.getSwapChain();
-		VkExtent2D extent = swapChain.getExtent();
-		float ratio = (float) extent.width() / extent.height();
-
-		PushConstants constants = new PushConstants();
-		constants.mpMatrix = new Matrix4f();
-		constants.mpMatrix.ortho(-ratio, ratio, -1.0f, 1.0f, -1.0f, 1.0f);
-		constants.mpMatrix.mul(model.getModelMatrix());
-		constants.mpMatrix.get(pPushConstants);
+		Matrix4f mvpMatrix = new Matrix4f(constants.pMatrix);
+		mvpMatrix.mul(constants.vMatrix);
+		mvpMatrix.mul(constants.mMatrix);
+		mvpMatrix.get(pPushConstants);
 
 		vkCmdPushConstants(commandBuffer,
 				   graphicsPipeline.getPipelineLayout(),
@@ -221,15 +226,6 @@ public class ShapeRenderer extends Renderer {
 
 		memFree(layouts);
 		pushConstantRanges.free();
-	}
-
-	@Data
-	private static class PushConstants {
-
-		public static final int BYTES = 16 * 4;
-
-		private Matrix4f mpMatrix;
-
 	}
 
 }

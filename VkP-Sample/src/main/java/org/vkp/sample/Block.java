@@ -1,41 +1,55 @@
 package org.vkp.sample;
 
-import org.joml.Vector3f;
-import org.vkp.engine.model.Model;
+import org.joml.Matrix4f;
+import org.joml.Vector2d;
+import org.vkp.engine.mesh.TexturedMesh;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class Block {
 
-	private Model model;
+	private Vector2d position;
 
 	private double mass;
 
 	private double speed;
 
-	private double x;
+	private double width;
 
-	public Block(Model model, double mass, double speed) {
-		this.model = model;
+	private double height;
+
+	private TexturedMesh texturedMesh;
+
+	public Block(TexturedMesh texturedMesh, Vector2d position, double width, double height,
+			double mass, double speed) {
+		this.texturedMesh = texturedMesh;
+		this.position = position;
+		this.width = width;
+		this.height = height;
 		this.mass = mass;
 		this.speed = speed;
 	}
 
-	public void update(double frameTime) {
-		x += speed * frameTime;
-		Vector3f pos = new Vector3f(model.getPosition());
-		pos.x = (float) x;
-		model.setPosition(pos);
+	public void update() {
+		position.x += speed;
 	}
 
 	public boolean intersects(Block block) {
-		Model otherModel = block.getModel();
-		double thisW = model.getWidth();
-		double otherW = otherModel.getWidth();
-		double thisX = x - thisW / 2;
-		double otherX = otherModel.getPosition().x - otherW / 2;
+		double thisW = getWidth();
+		double otherW = block.getWidth();
+		double thisX = position.x - thisW / 2;
+		double otherX = block.getPosition().x - otherW / 2;
 		return thisX + thisW > otherX && otherX + otherW > thisX;
+	}
+
+	public Matrix4f calculateModelMatrix() {
+		Matrix4f mMatrix = new Matrix4f();
+		mMatrix.translation((float) position.x, (float) position.y, 0.0f);
+		mMatrix.scaleXY((float) width, (float) height);
+		return mMatrix;
 	}
 
 }

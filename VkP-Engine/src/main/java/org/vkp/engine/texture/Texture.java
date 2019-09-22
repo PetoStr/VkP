@@ -69,7 +69,7 @@ public class Texture {
 
 		descriptorSet.updateCombinedImageSampler(0, sampler.getHandle(), imageView.getHandle());
 
-		this.textureInfo = metaData;
+		textureInfo = metaData;
 
 		memFree(imageData);
 	}

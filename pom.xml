@@ -9,14 +9,39 @@
 		<log4j.version>2.11.2</log4j.version>
 		<lwjgl.version>3.2.1</lwjgl.version>
 		<joml.version>1.9.13</joml.version>
-		<maven.compiler.source>1.10</maven.compiler.source>
-	    <maven.compiler.target>1.10</maven.compiler.target>
+        <project.java.version>1.10</project.java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<vkp.version>0.0.1-SNAPSHOT</vkp.version>
 	</properties>
+	
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>${project.java.version}</source>
+                    <target>${project.java.version}</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 	
 	<modules>
 		<module>VkP-Engine</module>
 		<module>VkP-Sample</module>
+		<module>VkP-Racing</module>
 	</modules>
 
 	<dependencies>

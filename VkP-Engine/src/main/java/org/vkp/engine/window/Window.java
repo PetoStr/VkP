@@ -1,5 +1,14 @@
 package org.vkp.engine.window;
 
+import static org.lwjgl.glfw.GLFWVulkan.glfwGetRequiredInstanceExtensions;
+import static org.lwjgl.glfw.GLFWVulkan.glfwVulkanSupported;
+
+import org.lwjgl.PointerBuffer;
+import org.lwjgl.glfw.GLFWErrorCallback;
+import org.vkp.engine.Config;
+
+import static org.lwjgl.system.MemoryUtil.NULL;
+
 import static org.lwjgl.glfw.GLFW.GLFW_CLIENT_API;
 import static org.lwjgl.glfw.GLFW.GLFW_FALSE;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
@@ -22,21 +31,13 @@ import static org.lwjgl.glfw.GLFW.glfwShowWindow;
 import static org.lwjgl.glfw.GLFW.glfwTerminate;
 import static org.lwjgl.glfw.GLFW.glfwWindowHint;
 import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;
-import static org.lwjgl.glfw.GLFWVulkan.glfwGetRequiredInstanceExtensions;
-import static org.lwjgl.glfw.GLFWVulkan.glfwVulkanSupported;
-import static org.lwjgl.system.MemoryUtil.NULL;
-
-import org.lwjgl.PointerBuffer;
-import org.lwjgl.glfw.GLFWErrorCallback;
-import org.lwjgl.glfw.GLFWKeyCallback;
-import org.vkp.engine.Config;
 
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2
-public final class Window implements WindowResizeListener {
+public final class Window implements WindowResizeListener, KeyListener {
 
 	@Getter
 	private long id;
@@ -55,7 +56,8 @@ public final class Window implements WindowResizeListener {
 	@Getter
 	private WindowSizeCallback windowSizeCallback;
 
-	private GLFWKeyCallback keyCallback;
+	@Getter
+	private KeyCallback keyCallback;
 
 	public void createWindow() {
 		if (!glfwInit()) {
@@ -74,14 +76,9 @@ public final class Window implements WindowResizeListener {
 
 		id = glfwCreateWindow(width, height, "VkP", NULL, NULL);
 
-		keyCallback = new GLFWKeyCallback() {
-			public void invoke(long window, int key, int scancode, int action, int mods) {
-				if (action == GLFW_PRESS && key == GLFW_KEY_ESCAPE) {
-					glfwSetWindowShouldClose(window, true);
-				}
-			}
-		};
+		keyCallback = new KeyCallback();
 		glfwSetKeyCallback(id, keyCallback);
+		keyCallback.registerListener(this);
 
 		windowSizeCallback = new WindowSizeCallback();
 		glfwSetWindowSizeCallback(id, windowSizeCallback);
@@ -103,8 +100,6 @@ public final class Window implements WindowResizeListener {
 	}
 
 	public void destroyWindow() {
-		keyCallback.free();
-
 		glfwDestroyWindow(id);
 		glfwTerminate();
 		glfwSetErrorCallback(null).free();
@@ -127,6 +122,13 @@ public final class Window implements WindowResizeListener {
 	public void onWindowResize(int width, int height) {
 		this.width = width;
 		this.height = height;
+	}
+
+	@Override
+	public void onKeyAction(int action, int key, int mods) {
+		if (action == GLFW_PRESS && key == GLFW_KEY_ESCAPE) {
+			glfwSetWindowShouldClose(id, true);
+		}
 	}
 
 }
