@@ -3,6 +3,7 @@ package org.vkp.engine.loader;
 import java.util.EnumMap;
 import java.util.Map;
 
+import org.vkp.engine.mesh.Arrow;
 import org.vkp.engine.mesh.Circle;
 import org.vkp.engine.mesh.Mesh;
 import org.vkp.engine.mesh.Quad;
@@ -69,6 +70,9 @@ public class ShapeLoader {
 				break;
 			case CIRCLE:
 				shapeMesh = new Circle(bufferCreator, stagingBufferCommand);
+				break;
+			case ARROW:
+				shapeMesh = new Arrow(bufferCreator, stagingBufferCommand);
 				break;
 
 		}

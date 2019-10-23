@@ -33,6 +33,4 @@ public class Triangle extends Mesh {
 		memFree(vertexData);
 	}
 
-
-
 }

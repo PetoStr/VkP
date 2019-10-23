@@ -52,22 +52,22 @@ public class GameRenderer {
 			return;
 		}
 
-		textRenderer.begin();
-		for (Text text : textsToDraw) {
-			textRenderer.addText(text);
-		}
-		textRenderer.end();
-
 		VkExtent2D extent = vkBase.getSwapChain().getExtent();
 		ShapeRenderer.PushConstants constants = new ShapeRenderer.PushConstants();
 		constants.pMatrix = new Matrix4f().ortho2D(0.0f, extent.width(), 0.0f, extent.height());
 		constants.vMatrix = camera.getViewMatrix();
 		shapeRenderer.begin();
 		for (Entity entity : entitiesToDraw) {
-			constants.mMatrix = entity.getModelMatrix();
+			constants.mMatrix = entity.getTransform().getModelMatrix();
 			shapeRenderer.recordCommands(entity.getTexturedMesh(), constants);
 		}
 		shapeRenderer.end();
+
+		textRenderer.begin();
+		for (Text text : textsToDraw) {
+			textRenderer.addText(text);
+		}
+		textRenderer.end();
 
 		vkBase.submitFrame();
 

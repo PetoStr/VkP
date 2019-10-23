@@ -23,7 +23,7 @@ public class Quad extends Mesh {
 		fb.put(0.5f).put(0.5f).put(0.0f).put(1.0f).put(1.0f).put(1.0f);
 		fb.flip();
 
-		ByteBuffer indices = memAlloc(6 * 4);
+		ByteBuffer indices = memAlloc(2 * 3 * 4);
 		IntBuffer ib = indices.asIntBuffer();
 		ib.put(0).put(1).put(3);
 		ib.put(0).put(3).put(2);
@@ -34,7 +34,5 @@ public class Quad extends Mesh {
 		memFree(indices);
 		memFree(vertexData);
 	}
-
-
 
 }

@@ -44,6 +44,4 @@ public class Circle extends Mesh {
 		memFree(vertexData);
 	}
 
-
-
 }

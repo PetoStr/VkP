@@ -9,9 +9,12 @@ import lombok.Getter;
 @Getter
 public class Assets {
 
+	private ShapeLoader shapeLoader;
+
 	private TexturedMesh redCar;
 
 	public Assets(ShapeLoader shapeLoader) {
+		this.shapeLoader = shapeLoader;
 		redCar = shapeLoader.load(ShapeType.QUAD, "textures/red-car.png");
 	}
 

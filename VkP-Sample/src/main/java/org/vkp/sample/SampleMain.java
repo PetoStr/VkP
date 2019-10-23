@@ -84,7 +84,7 @@ public class SampleMain {
 		blockB = new Block(shapeB, blockBPos, 360.0f, 360.0f, 100e8, -0.0001f);
 		blocks.add(blockB);
 
-		Color color = new Color((byte) 255, (byte) 255, (byte) 255, (byte) 255);
+		Color color = new Color(255, 255, 255);
 		TexturedMesh shapeWall = shapeLoader.load(ShapeType.QUAD, color);
 		Vector2d wallPos = new Vector2d(window.getWidth() * (1.0f / 10.0f),
 				window.getHeight() / 2.0f - 40.0f);

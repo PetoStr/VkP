@@ -172,7 +172,7 @@ public class VulkanPipeline {
 		VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo =
 				VkPipelineDepthStencilStateCreateInfo.calloc()
 					.sType(VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO)
-					.depthTestEnable(true)
+					.depthTestEnable(false)
 					.depthWriteEnable(true)
 					.depthCompareOp(VK_COMPARE_OP_LESS)
 					.depthBoundsTestEnable(false)

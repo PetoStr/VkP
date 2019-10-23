@@ -1,18 +1,46 @@
 package org.vkp.racing.entity;
 
-import org.joml.Matrix4f;
 import org.vkp.engine.mesh.TexturedMesh;
 import org.vkp.racing.GameRenderer;
 import org.vkp.racing.Scene;
+import org.vkp.racing.component.GraphicsComponent;
+import org.vkp.racing.component.InputComponent;
+import org.vkp.racing.component.PhysicsComponent;
 
-public interface Entity {
+import lombok.Getter;
+import lombok.Setter;
 
-	void update(Scene scene);
+public class Entity {
 
-	void draw(GameRenderer renderer);
+	@Getter
+	@Setter
+	private Transform transform;
 
-	Matrix4f getModelMatrix();
+	private GraphicsComponent graphicsComponent;
+	private PhysicsComponent physicsComponent;
+	private InputComponent inputComponent;
 
-	TexturedMesh getTexturedMesh();
+	public Entity(Transform transform,
+			GraphicsComponent graphicsComponent,
+			PhysicsComponent physicsComponent,
+			InputComponent inputComponent) {
+		this.transform = transform;
+		this.graphicsComponent = graphicsComponent;
+		this.physicsComponent = physicsComponent;
+		this.inputComponent = inputComponent;
+	}
+
+	public void update(Scene scene) {
+		inputComponent.update(this);
+		physicsComponent.update(this, scene);
+	}
+
+	public void draw(GameRenderer renderer) {
+		graphicsComponent.draw(this, renderer);
+	}
+
+	public TexturedMesh getTexturedMesh() {
+		return graphicsComponent.getTexturedMesh();
+	}
 
 }
