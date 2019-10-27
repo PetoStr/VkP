@@ -4,8 +4,10 @@ import org.joml.Vector3f;
 import org.vkp.engine.VkBase;
 import org.vkp.engine.texture.TextureInfo;
 import org.vkp.engine.window.Window;
+import org.vkp.racing.component.InputComponent;
 import org.vkp.racing.component.NullInputComponent;
 import org.vkp.racing.component.NullPhysicsComponent;
+import org.vkp.racing.component.car.AiInputComponent;
 import org.vkp.racing.component.car.CarGraphicsComponent;
 import org.vkp.racing.component.car.CarPhysicsComponent;
 import org.vkp.racing.component.car.KeyboardInputComponent;
@@ -13,10 +15,7 @@ import org.vkp.racing.component.car.WheelGraphicsComponent;
 import org.vkp.racing.entity.Entity;
 import org.vkp.racing.entity.Transform;
 
-import lombok.extern.log4j.Log4j2;
-
-@Log4j2
-public class Main {
+public class Racing {
 
 	private static final int UPS = 60;
 	private static final float MS_PER_UPDATE = 1000.0f / UPS;
@@ -98,7 +97,17 @@ public class Main {
 				new NullInputComponent());
 		scene.getEntities().add(rightWheel);
 
+		CarPhysicsComponent randomAiPhysicsComponent = new CarPhysicsComponent();
+		InputComponent aiInputComponent = new AiInputComponent(randomAiPhysicsComponent);
+		Transform randomAiCarTransform = new Transform();
+		randomAiCarTransform.setPosition(new Vector3f(600.0f, 300.0f, 0.0f));
+		randomAiCarTransform.setWidth(textureInfo.getWidth() / 20.0f);
+		randomAiCarTransform.setHeight(textureInfo.getHeight() / 20.0f);
+		Entity randomAiCar = new Entity(randomAiCarTransform, carGraphicsComponent,
+				randomAiPhysicsComponent, aiInputComponent);
+
 		scene.getEntities().add(car);
+		scene.getEntities().add(randomAiCar);
 	}
 
 	private void loop() {
@@ -139,7 +148,7 @@ public class Main {
 	}
 
 	public static void main(String[] args) {
-		new Main().start();
+		new Racing().start();
 	}
 
 }

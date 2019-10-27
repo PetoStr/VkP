@@ -50,17 +50,17 @@ public class KeyboardInputComponent implements InputComponent, KeyListener {
 	}
 
 	private void handleKeyPress(Entity entity, KeyAction keyAction) {
-		if (keyAction.key == GLFW_KEY_W && carPhysicsComponent.getEngineForce() == 0.0f) {
-			carPhysicsComponent.setEngineForce(1.5f);
-		} else if (keyAction.key == GLFW_KEY_S && carPhysicsComponent.getEngineForce() == 0.0f) {
-			carPhysicsComponent.setEngineForce(-1.5f);
-		} else if (keyAction.key == GLFW_KEY_A && carPhysicsComponent.getSteerAngle() == 0.0f) {
-			carPhysicsComponent.setSteerAngle(-0.25f);
+		if (keyAction.key == GLFW_KEY_W) {
+			carPhysicsComponent.accelerate();
+		} else if (keyAction.key == GLFW_KEY_S) {
+			carPhysicsComponent.reverse();
+		} else if (keyAction.key == GLFW_KEY_A) {
+			carPhysicsComponent.steerLeft();
 			for (Transform child : entity.getTransform().getChildren()) {
 				child.setRotation(-0.25f);
 			}
-		} else if (keyAction.key == GLFW_KEY_D && carPhysicsComponent.getSteerAngle() == 0.0f) {
-			carPhysicsComponent.setSteerAngle(0.25f);
+		} else if (keyAction.key == GLFW_KEY_D) {
+			carPhysicsComponent.steerRight();
 			for (Transform child : entity.getTransform().getChildren()) {
 				child.setRotation(0.25f);
 			}
@@ -68,13 +68,13 @@ public class KeyboardInputComponent implements InputComponent, KeyListener {
 	}
 
 	private void handleKeyRelease(Entity entity, KeyAction keyAction) {
-		if (keyAction.key == GLFW_KEY_W && carPhysicsComponent.getEngineForce() != 0.0f) {
-			carPhysicsComponent.setEngineForce(0.0f);
-		} else if (keyAction.key == GLFW_KEY_S && carPhysicsComponent.getEngineForce() != 0.0f) {
-			carPhysicsComponent.setEngineForce(0.0f);
-		} else if ((keyAction.key == GLFW_KEY_A || keyAction.key == GLFW_KEY_D)
-				&& carPhysicsComponent.getSteerAngle() != 0.0f) {
-			carPhysicsComponent.setSteerAngle(0.0f);
+		if (keyAction.key == GLFW_KEY_W) {
+			carPhysicsComponent.neutral();
+		} else if (keyAction.key == GLFW_KEY_S) {
+			carPhysicsComponent.neutral();
+		} else if ((keyAction.key == GLFW_KEY_A)
+				|| (keyAction.key == GLFW_KEY_D)) {
+			carPhysicsComponent.noSteer();
 			for (Transform child : entity.getTransform().getChildren()) {
 				child.setRotation(0.0f);
 			}

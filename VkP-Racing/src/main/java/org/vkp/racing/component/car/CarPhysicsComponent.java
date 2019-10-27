@@ -12,29 +12,52 @@ import lombok.Setter;
 
 public class CarPhysicsComponent implements PhysicsComponent {
 
-	@Getter
-	@Setter
-	public float engineForce;
-
-	@Getter
-	@Setter
-	public float steerAngle;
-
 	private static final float CONST_DRAG = 0.04257f;
 	private static final float CONST_ROLLING_RESISTANCE = 0.128f;
 	private static final float WHEEL_BASE_HALF = 6.0f;
 
+	private float engineForce;
+
+	private float steerAngle;
+
+	@Getter
+	@Setter
 	private float speed;
 
 	@Override
 	public void update(Entity entity, Scene scene) {
+		float direction = Math.signum(engineForce);
 		float rrForce = -CONST_ROLLING_RESISTANCE * speed;
-		float dragForce = -CONST_DRAG * speed * speed;
+		float dragForce = -CONST_DRAG * speed * speed * direction;
 		float tractionForce = engineForce;
 		float longForce = rrForce + dragForce + tractionForce;
 		float acceleration = longForce / 500.0f;
 		speed += acceleration * 10;
 		updateWheels(entity);
+	}
+
+	public void steerLeft() {
+		steerAngle = -0.25f;
+	}
+
+	public void steerRight() {
+		steerAngle = 0.25f;
+	}
+
+	public void noSteer() {
+		steerAngle = 0.0f;
+	}
+
+	public void accelerate() {
+		engineForce = 1.5f;
+	}
+
+	public void reverse() {
+		engineForce = -1.5f;
+	}
+
+	public void neutral() {
+		engineForce = 0.0f;
 	}
 
 	private void updateWheels(Entity entity) {
