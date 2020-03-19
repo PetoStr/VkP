@@ -1,6 +1,7 @@
-package org.vkp.racing.entity;
+package org.vkp.racing.ecs.component;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.List;
 
 import org.joml.Matrix4f;
@@ -12,7 +13,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @NoArgsConstructor
-public class Transform {
+public class Transform implements Component {
+
+	public static final BitSet ID = new BitSet();
+	static {
+		ID.set(1);
+	}
 
 	@Getter
 	@Setter
@@ -45,6 +51,11 @@ public class Transform {
 			mMatrix = new Matrix4f(parent.getModelMatrix()).mul(mMatrix);
 		}
 		return mMatrix;
+	}
+
+	@Override
+	public BitSet getId() {
+		return ID;
 	}
 
 }

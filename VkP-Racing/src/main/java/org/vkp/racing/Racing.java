@@ -2,18 +2,23 @@ package org.vkp.racing;
 
 import org.joml.Vector3f;
 import org.vkp.engine.VkBase;
+import org.vkp.engine.loader.ShapeLoader;
+import org.vkp.engine.loader.ShapeType;
+import org.vkp.engine.mesh.TexturedMesh;
+import org.vkp.engine.texture.Color;
 import org.vkp.engine.texture.TextureInfo;
 import org.vkp.engine.window.Window;
-import org.vkp.racing.component.InputComponent;
-import org.vkp.racing.component.NullInputComponent;
-import org.vkp.racing.component.NullPhysicsComponent;
-import org.vkp.racing.component.car.AiInputComponent;
-import org.vkp.racing.component.car.CarGraphicsComponent;
-import org.vkp.racing.component.car.CarPhysicsComponent;
-import org.vkp.racing.component.car.KeyboardInputComponent;
-import org.vkp.racing.component.car.WheelGraphicsComponent;
-import org.vkp.racing.entity.Entity;
-import org.vkp.racing.entity.Transform;
+import org.vkp.racing.ecs.component.CarPhysicsComponent;
+import org.vkp.racing.ecs.component.CarAiComponent;
+import org.vkp.racing.ecs.component.CarKeyboardComponent;
+import org.vkp.racing.ecs.component.TexturedMeshComponent;
+import org.vkp.racing.ecs.component.Transform;
+import org.vkp.racing.ecs.system.CarAiInput;
+import org.vkp.racing.ecs.system.CarKeyboardInput;
+import org.vkp.racing.ecs.system.CarMovementSystem;
+import org.vkp.racing.ecs.system.Dispatcher;
+import org.vkp.racing.ecs.system.RenderSystem;
+import org.vkp.racing.scene.Scene;
 
 public class Racing {
 
@@ -25,6 +30,8 @@ public class Racing {
 	private VkBase vkBase;
 
 	private Scene scene;
+
+	private Dispatcher dispatcher;
 
 	private GameRenderer gameRenderer;
 
@@ -46,6 +53,7 @@ public class Racing {
 		assets = new Assets(vkBase.getShapeLoader());
 
 		createEntities();
+		createGameSystems();
 
 		window.show();
 
@@ -59,18 +67,13 @@ public class Racing {
 	}
 
 	private void createEntities() {
-		CarGraphicsComponent carGraphicsComponent = new CarGraphicsComponent(assets);
-		CarPhysicsComponent carPhysicsComponent = new CarPhysicsComponent();
-		KeyboardInputComponent keyboardInputComponent =
-				new KeyboardInputComponent(carPhysicsComponent, window.getKeyCallback());
+		TexturedMeshComponent carTexturedMesh = new TexturedMeshComponent(assets.getRedCar());
+		TextureInfo textureInfo = carTexturedMesh.getTexturedMesh().getTexture().getTextureInfo();
+
 		Transform carTransform = new Transform();
-		TextureInfo textureInfo =
-				carGraphicsComponent.getTexturedMesh().getTexture().getTextureInfo();
 		carTransform.setPosition(new Vector3f(400.0f, 200.0f, 0.0f));
 		carTransform.setWidth(textureInfo.getWidth() / 20.0f);
 		carTransform.setHeight(textureInfo.getHeight() / 20.0f);
-		Entity car = new Entity(carTransform, carGraphicsComponent, carPhysicsComponent,
-				keyboardInputComponent);
 
 		float wheelWidth = carTransform.getWidth() / 150;
 		float wheelHeight = carTransform.getHeight() / 100;
@@ -80,11 +83,6 @@ public class Racing {
 		leftWheelTransform.setHeight(wheelHeight);
 		leftWheelTransform.setParent(carTransform);
 		carTransform.getChildren().add(leftWheelTransform);
-		Entity leftWheel = new Entity(leftWheelTransform,
-				new WheelGraphicsComponent(assets),
-				new NullPhysicsComponent(),
-				new NullInputComponent());
-		scene.getEntities().add(leftWheel);
 
 		Transform rightWheelTransform = new Transform();
 		rightWheelTransform.setPosition(new Vector3f(0.3f, 0.36f, 0.0f));
@@ -92,22 +90,48 @@ public class Racing {
 		rightWheelTransform.setHeight(wheelHeight);
 		rightWheelTransform.setParent(carTransform);
 		carTransform.getChildren().add(rightWheelTransform);
-		Entity rightWheel = new Entity(rightWheelTransform, new WheelGraphicsComponent(assets),
-				new NullPhysicsComponent(),
-				new NullInputComponent());
-		scene.getEntities().add(rightWheel);
 
-		CarPhysicsComponent randomAiPhysicsComponent = new CarPhysicsComponent();
-		InputComponent aiInputComponent = new AiInputComponent(randomAiPhysicsComponent);
+		ShapeLoader shapeLoader = assets.getShapeLoader();
+		Color white = new Color(255, 255, 255);
+		TexturedMesh wheelTexturedMesh = shapeLoader.load(ShapeType.QUAD, white);
+
 		Transform randomAiCarTransform = new Transform();
 		randomAiCarTransform.setPosition(new Vector3f(600.0f, 300.0f, 0.0f));
 		randomAiCarTransform.setWidth(textureInfo.getWidth() / 20.0f);
 		randomAiCarTransform.setHeight(textureInfo.getHeight() / 20.0f);
-		Entity randomAiCar = new Entity(randomAiCarTransform, carGraphicsComponent,
-				randomAiPhysicsComponent, aiInputComponent);
 
-		scene.getEntities().add(car);
-		scene.getEntities().add(randomAiCar);
+		scene.createEntity()
+			.with(carTexturedMesh)
+			.with(carTransform)
+			.with(new CarPhysicsComponent())
+			.with(new CarKeyboardComponent())
+			.build();
+
+		scene.createEntity()
+			.with(new TexturedMeshComponent(wheelTexturedMesh))
+			.with(leftWheelTransform)
+			.build();
+
+		scene.createEntity()
+			.with(new TexturedMeshComponent(wheelTexturedMesh))
+			.with(rightWheelTransform)
+			.build();
+
+		scene.createEntity()
+			.with(carTexturedMesh)
+			.with(randomAiCarTransform)
+			.with(new CarPhysicsComponent())
+			.with(new CarAiComponent())
+			.build();
+	}
+
+	private void createGameSystems() {
+		dispatcher = Dispatcher.builder()
+				.gameSystem(new CarMovementSystem())
+				.gameSystem(new CarKeyboardInput(window.getKeyCallback()))
+				.gameSystem(new CarAiInput())
+				.renderSystem(new RenderSystem(gameRenderer))
+				.build();
 	}
 
 	private void loop() {
@@ -125,15 +149,13 @@ public class Racing {
 			window.update();
 			scene.getCamera().update();
 
+			dispatcher.prepare();
 			while (lag >= MS_PER_UPDATE) {
-				for (Entity entity : scene.getEntities()) {
-					entity.update(scene);
-				}
+				dispatcher.dispatchGameSystems(scene);
 				lag -= MS_PER_UPDATE;
 			}
-			for (Entity entity : scene.getEntities()) {
-				entity.draw(gameRenderer);
-			}
+			dispatcher.dispatchRenderSystems(scene);
+			dispatcher.finish();
 
 			gameRenderer.drawText("FPS: " + fps, -1.0f, -1.0f, 0.5f);
 			gameRenderer.draw(scene.getCamera());

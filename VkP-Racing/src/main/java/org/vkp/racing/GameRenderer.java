@@ -11,7 +11,6 @@ import org.vkp.engine.VkBase;
 import org.vkp.engine.font.Text;
 import org.vkp.engine.renderer.ShapeRenderer;
 import org.vkp.engine.renderer.TextRenderer;
-import org.vkp.racing.entity.Entity;
 
 import lombok.Getter;
 
@@ -25,7 +24,7 @@ public class GameRenderer {
 
 	private VkBase vkBase;
 
-	private List<Entity> entitiesToDraw = new ArrayList<>();
+	private List<TexturedModel> texturedModelsToDraw = new ArrayList<>();
 	private List<Text> textsToDraw = new ArrayList<>();
 
 	public GameRenderer(VkBase vkBase) {
@@ -35,8 +34,8 @@ public class GameRenderer {
 		textRenderer = vkBase.getTextRenderer();
 	}
 
-	public void drawEntity(Entity entity) {
-		entitiesToDraw.add(entity);
+	public void drawTexturedModel(TexturedModel texturedModel) {
+		texturedModelsToDraw.add(texturedModel);
 	}
 
 	public void drawText(Text text) {
@@ -57,9 +56,9 @@ public class GameRenderer {
 		constants.pMatrix = new Matrix4f().ortho2D(0.0f, extent.width(), 0.0f, extent.height());
 		constants.vMatrix = camera.getViewMatrix();
 		shapeRenderer.begin();
-		for (Entity entity : entitiesToDraw) {
-			constants.mMatrix = entity.getTransform().getModelMatrix();
-			shapeRenderer.recordCommands(entity.getTexturedMesh(), constants);
+		for (TexturedModel texturedModel : texturedModelsToDraw) {
+			constants.mMatrix = texturedModel.getModelMatrix();
+			shapeRenderer.recordCommands(texturedModel.getTexturedMesh(), constants);
 		}
 		shapeRenderer.end();
 
@@ -71,7 +70,7 @@ public class GameRenderer {
 
 		vkBase.submitFrame();
 
-		entitiesToDraw.clear();
+		texturedModelsToDraw.clear();
 		textsToDraw.clear();
 	}
 
