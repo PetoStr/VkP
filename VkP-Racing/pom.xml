@@ -14,7 +14,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>org.vkp.racing.Main</mainClass>
+							<mainClass>org.vkp.racing.Racing</mainClass>
 						</manifest>
 					</archive>
 					<descriptorRefs>
