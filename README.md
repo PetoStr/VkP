@@ -12,7 +12,7 @@ The graphics engine. Handles all Vulkan and window related stuff thanks to [LWJG
 
 ### VkP-PiCalc
 
-Simulates calculation of PI using elastic collisions.
+Simulates calculation of number pi using elastic collisions.
 
 ### VkP-Racing
 
