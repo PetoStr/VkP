@@ -40,7 +40,7 @@
 	
 	<modules>
 		<module>VkP-Engine</module>
-		<module>VkP-Sample</module>
+		<module>VkP-PiCalc</module>
 		<module>VkP-Racing</module>
 	</modules>
 

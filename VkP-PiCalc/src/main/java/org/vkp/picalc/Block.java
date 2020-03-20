@@ -1,4 +1,4 @@
-package org.vkp.sample;
+package org.vkp.picalc;
 
 import org.joml.Matrix4f;
 import org.joml.Vector2d;

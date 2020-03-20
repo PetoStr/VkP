@@ -5,8 +5,8 @@
     <artifactId>VkP</artifactId>
     <version>${vkp.version}</version>
   </parent>
-  <groupId>org.vkp.sample</groupId>
-  <artifactId>VkP-Sample</artifactId>
+  <groupId>org.vkp.picalc</groupId>
+  <artifactId>VkP-PiCalc</artifactId>
   <packaging>jar</packaging>
 	<build>
 		<plugins>
@@ -15,7 +15,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>org.vkp.sample.SampleMain</mainClass>
+							<mainClass>org.vkp.picalc.PiCalc</mainClass>
 						</manifest>
 					</archive>
 					<descriptorRefs>

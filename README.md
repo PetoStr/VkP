@@ -10,7 +10,7 @@ This repository also contains samples with own modules.
 
 The graphics engine. Handles all Vulkan and window related stuff thanks to [LWJGL 3](https://www.lwjgl.org).
 
-### VkP-Sample
+### VkP-PiCalc
 
 Simulates calculation of PI using elastic collisions.
 

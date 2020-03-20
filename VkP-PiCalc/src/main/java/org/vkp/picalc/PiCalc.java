@@ -1,4 +1,4 @@
-package org.vkp.sample;
+package org.vkp.picalc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +19,7 @@ import org.vkp.engine.window.Window;
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2
-public class SampleMain {
+public class PiCalc {
 
 	private static final double MS_PER_UPDATE = 0.001d;
 
@@ -188,7 +188,7 @@ public class SampleMain {
 
 	public static void main(String[] args) {
 		try {
-			new SampleMain().start();
+			new PiCalc().start();
 		} catch (Exception e) {
 			log.fatal("", e);
 		}
