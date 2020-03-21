@@ -32,7 +32,13 @@ public class CarAiInput implements GameSystem {
 		if (rotation < ANGLES[carAi.getCurrentAngleIndex()]
 				|| (carAi.getCurrentAngleIndex() == 0 && rotation > ANGLES[ANGLES.length - 1])) {
 			carPhysics.steerRight();
+			for (Transform child : componentGroup.transform.getChildren()) {
+				child.setRotation(0.25f);
+			}
 		} else if (!carAi.isDelay()) {
+			for (Transform child : componentGroup.transform.getChildren()) {
+				child.setRotation(0.0f);
+			}
 			carAi.setDelay(true);
 			carAi.setStartTime(now);
 			carPhysics.noSteer();

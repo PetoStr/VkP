@@ -9,6 +9,7 @@ import org.vkp.engine.texture.Color;
 import org.vkp.engine.texture.TextureInfo;
 import org.vkp.engine.window.Window;
 import org.vkp.racing.ecs.component.CarPhysicsComponent;
+import org.vkp.racing.ecs.component.Component;
 import org.vkp.racing.ecs.component.CarAiComponent;
 import org.vkp.racing.ecs.component.CarKeyboardComponent;
 import org.vkp.racing.ecs.component.TexturedMeshComponent;
@@ -75,6 +76,21 @@ public class Racing {
 		carTransform.setWidth(textureInfo.getWidth() / 20.0f);
 		carTransform.setHeight(textureInfo.getHeight() / 20.0f);
 
+		ShapeLoader shapeLoader = assets.getShapeLoader();
+		Color white = new Color(255, 255, 255);
+		TexturedMesh wheelTexturedMesh = shapeLoader.load(ShapeType.QUAD, white);
+
+		Transform randomAiCarTransform = new Transform();
+		randomAiCarTransform.setPosition(new Vector3f(600.0f, 300.0f, 0.0f));
+		randomAiCarTransform.setWidth(textureInfo.getWidth() / 20.0f);
+		randomAiCarTransform.setHeight(textureInfo.getHeight() / 20.0f);
+
+		createCar(carTransform, wheelTexturedMesh, new CarKeyboardComponent());
+		createCar(randomAiCarTransform, wheelTexturedMesh, new CarAiComponent());
+	}
+
+	private void createCar(Transform carTransform, TexturedMesh wheelTexturedMesh,
+			Component inputComponent) {
 		float wheelWidth = carTransform.getWidth() / 150;
 		float wheelHeight = carTransform.getHeight() / 100;
 		Transform leftWheelTransform = new Transform();
@@ -91,22 +107,6 @@ public class Racing {
 		rightWheelTransform.setParent(carTransform);
 		carTransform.getChildren().add(rightWheelTransform);
 
-		ShapeLoader shapeLoader = assets.getShapeLoader();
-		Color white = new Color(255, 255, 255);
-		TexturedMesh wheelTexturedMesh = shapeLoader.load(ShapeType.QUAD, white);
-
-		Transform randomAiCarTransform = new Transform();
-		randomAiCarTransform.setPosition(new Vector3f(600.0f, 300.0f, 0.0f));
-		randomAiCarTransform.setWidth(textureInfo.getWidth() / 20.0f);
-		randomAiCarTransform.setHeight(textureInfo.getHeight() / 20.0f);
-
-		scene.createEntity()
-			.with(carTexturedMesh)
-			.with(carTransform)
-			.with(new CarPhysicsComponent())
-			.with(new CarKeyboardComponent())
-			.build();
-
 		scene.createEntity()
 			.with(new TexturedMeshComponent(wheelTexturedMesh))
 			.with(leftWheelTransform)
@@ -118,10 +118,10 @@ public class Racing {
 			.build();
 
 		scene.createEntity()
-			.with(carTexturedMesh)
-			.with(randomAiCarTransform)
+			.with(new TexturedMeshComponent(assets.getRedCar()))
+			.with(carTransform)
 			.with(new CarPhysicsComponent())
-			.with(new CarAiComponent())
+			.with(inputComponent)
 			.build();
 	}
 
