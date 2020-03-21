@@ -149,13 +149,13 @@ public class Racing {
 			window.update();
 			scene.getCamera().update();
 
-			dispatcher.prepare();
+			dispatcher.prepareSystems();
 			while (lag >= MS_PER_UPDATE) {
 				dispatcher.dispatchGameSystems(scene);
 				lag -= MS_PER_UPDATE;
 			}
 			dispatcher.dispatchRenderSystems(scene);
-			dispatcher.finish();
+			dispatcher.finishSystems();
 
 			gameRenderer.drawText("FPS: " + fps, -1.0f, -1.0f, 0.5f);
 			gameRenderer.draw(scene.getCamera());

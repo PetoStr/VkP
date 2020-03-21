@@ -48,12 +48,12 @@ public class Dispatcher {
 		dispatch(scene, renderSystems);
 	}
 
-	public void prepare() {
+	public void prepareSystems() {
 		gameSystems.forEach(GameSystem::prepare);
 		renderSystems.forEach(GameSystem::prepare);
 	}
 
-	public void finish() {
+	public void finishSystems() {
 		gameSystems.forEach(GameSystem::finish);
 		renderSystems.forEach(GameSystem::finish);
 	}
