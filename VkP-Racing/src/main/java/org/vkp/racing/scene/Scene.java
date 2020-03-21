@@ -1,5 +1,6 @@
 package org.vkp.racing.scene;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +17,9 @@ public class Scene {
 
 	@Getter
 	private Map<Integer, List<Component>> entities = new HashMap<>();
+
+	@Getter
+	private List<Integer> walls = new ArrayList<>();
 
 	private int newEntityId = 0;
 

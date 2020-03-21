@@ -8,10 +8,10 @@ import org.vkp.engine.mesh.TexturedMesh;
 import org.vkp.engine.texture.Color;
 import org.vkp.engine.texture.TextureInfo;
 import org.vkp.engine.window.Window;
-import org.vkp.racing.ecs.component.CarPhysicsComponent;
-import org.vkp.racing.ecs.component.Component;
 import org.vkp.racing.ecs.component.CarAiComponent;
 import org.vkp.racing.ecs.component.CarKeyboardComponent;
+import org.vkp.racing.ecs.component.CarPhysicsComponent;
+import org.vkp.racing.ecs.component.Component;
 import org.vkp.racing.ecs.component.TexturedMeshComponent;
 import org.vkp.racing.ecs.component.Transform;
 import org.vkp.racing.ecs.system.CarAiInput;
@@ -68,6 +68,13 @@ public class Racing {
 	}
 
 	private void createEntities() {
+		RaceTrackCreator raceTrackCreator = new RaceTrackCreator(scene, assets);
+
+		raceTrackCreator.createRaceTrack();
+		createCars();
+	}
+
+	private void createCars() {
 		TexturedMeshComponent carTexturedMesh = new TexturedMeshComponent(assets.getRedCar());
 		TextureInfo textureInfo = carTexturedMesh.getTexturedMesh().getTexture().getTextureInfo();
 
@@ -77,8 +84,8 @@ public class Racing {
 		carTransform.setHeight(textureInfo.getHeight() / 20.0f);
 
 		ShapeLoader shapeLoader = assets.getShapeLoader();
-		Color white = new Color(255, 255, 255);
-		TexturedMesh wheelTexturedMesh = shapeLoader.load(ShapeType.QUAD, white);
+		Color black = new Color(0, 0, 0);
+		TexturedMesh wheelTexturedMesh = shapeLoader.load(ShapeType.QUAD, black);
 
 		Transform randomAiCarTransform = new Transform();
 		randomAiCarTransform.setPosition(new Vector3f(600.0f, 300.0f, 0.0f));
@@ -94,14 +101,14 @@ public class Racing {
 		float wheelWidth = carTransform.getWidth() / 150;
 		float wheelHeight = carTransform.getHeight() / 100;
 		Transform leftWheelTransform = new Transform();
-		leftWheelTransform.setPosition(new Vector3f(0.3f, -0.36f, 0.0f));
+		leftWheelTransform.setPosition(new Vector3f(0.3f, -0.41f, 0.0f));
 		leftWheelTransform.setWidth(wheelWidth);
 		leftWheelTransform.setHeight(wheelHeight);
 		leftWheelTransform.setParent(carTransform);
 		carTransform.getChildren().add(leftWheelTransform);
 
 		Transform rightWheelTransform = new Transform();
-		rightWheelTransform.setPosition(new Vector3f(0.3f, 0.36f, 0.0f));
+		rightWheelTransform.setPosition(new Vector3f(0.3f, 0.41f, 0.0f));
 		rightWheelTransform.setWidth(wheelWidth);
 		rightWheelTransform.setHeight(wheelHeight);
 		rightWheelTransform.setParent(carTransform);

@@ -12,10 +12,18 @@ public class Assets {
 	private ShapeLoader shapeLoader;
 
 	private TexturedMesh redCar;
+	private TexturedMesh road;
+	private TexturedMesh roadCorner;
 
 	public Assets(ShapeLoader shapeLoader) {
 		this.shapeLoader = shapeLoader;
+		loadAssets();
+	}
+
+	private void loadAssets() {
 		redCar = shapeLoader.load(ShapeType.QUAD, "textures/red-car.png");
+		road = shapeLoader.load(ShapeType.QUAD, "textures/road.png");
+		roadCorner = shapeLoader.load(ShapeType.QUAD, "textures/road-corner.png");
 	}
 
 }
