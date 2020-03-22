@@ -19,7 +19,7 @@ public class Scene {
 	private Map<Integer, List<Component>> entities = new HashMap<>();
 
 	@Getter
-	private List<Integer> walls = new ArrayList<>();
+	private List<Integer> barriers = new ArrayList<>();
 
 	private int newEntityId = 0;
 

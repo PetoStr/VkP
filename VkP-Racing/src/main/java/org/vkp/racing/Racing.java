@@ -17,6 +17,7 @@ import org.vkp.racing.ecs.component.Transform;
 import org.vkp.racing.ecs.system.CarAiInput;
 import org.vkp.racing.ecs.system.CarKeyboardInput;
 import org.vkp.racing.ecs.system.CarMovementSystem;
+import org.vkp.racing.ecs.system.CarPhysics;
 import org.vkp.racing.ecs.system.Dispatcher;
 import org.vkp.racing.ecs.system.RenderSystem;
 import org.vkp.racing.scene.Scene;
@@ -69,8 +70,8 @@ public class Racing {
 
 	private void createEntities() {
 		RaceTrackCreator raceTrackCreator = new RaceTrackCreator(scene, assets);
-
 		raceTrackCreator.createRaceTrack();
+
 		createCars();
 	}
 
@@ -79,7 +80,7 @@ public class Racing {
 		TextureInfo textureInfo = carTexturedMesh.getTexturedMesh().getTexture().getTextureInfo();
 
 		Transform carTransform = new Transform();
-		carTransform.setPosition(new Vector3f(400.0f, 200.0f, 0.0f));
+		carTransform.setPosition(new Vector3f(350.0f, 240.0f, 0.0f));
 		carTransform.setWidth(textureInfo.getWidth() / 20.0f);
 		carTransform.setHeight(textureInfo.getHeight() / 20.0f);
 
@@ -88,7 +89,7 @@ public class Racing {
 		TexturedMesh wheelTexturedMesh = shapeLoader.load(ShapeType.QUAD, black);
 
 		Transform randomAiCarTransform = new Transform();
-		randomAiCarTransform.setPosition(new Vector3f(600.0f, 300.0f, 0.0f));
+		randomAiCarTransform.setPosition(new Vector3f(350.0f, 280.0f, 0.0f));
 		randomAiCarTransform.setWidth(textureInfo.getWidth() / 20.0f);
 		randomAiCarTransform.setHeight(textureInfo.getHeight() / 20.0f);
 
@@ -137,6 +138,7 @@ public class Racing {
 				.gameSystem(new CarMovementSystem())
 				.gameSystem(new CarKeyboardInput(window.getKeyCallback()))
 				.gameSystem(new CarAiInput())
+				.gameSystem(new CarPhysics(scene))
 				.renderSystem(new RenderSystem(gameRenderer))
 				.build();
 	}

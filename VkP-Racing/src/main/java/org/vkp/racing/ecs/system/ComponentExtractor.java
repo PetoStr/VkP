@@ -10,6 +10,14 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 public class ComponentExtractor<T> {
 
+	public static Component extractOne(Class<?> type, List<Component> components) {
+		for (Component component : components) {
+			if (component.getClass() == type) return component;
+		}
+
+		return null;
+	}
+
 	public void extract(T componentGroup, List<Component> components) {
 		components.forEach(component -> setMatchingField(componentGroup, component));
 	}

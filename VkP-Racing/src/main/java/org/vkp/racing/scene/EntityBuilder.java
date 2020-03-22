@@ -18,7 +18,6 @@ public class EntityBuilder {
 		this.scene = scene;
 
 		scene.getEntities().put(entityId, new ArrayList<>());
-		if (isBarrier) scene.getWalls().add(entityId);
 	}
 
 	public EntityBuilder with(Component component) {
@@ -30,6 +29,8 @@ public class EntityBuilder {
 	}
 
 	public int build() {
+		if (isBarrier) scene.getBarriers().add(entityId);
+
 		return entityId;
 	}
 

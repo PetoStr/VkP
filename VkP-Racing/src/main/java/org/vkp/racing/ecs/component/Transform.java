@@ -5,8 +5,11 @@ import java.util.BitSet;
 import java.util.List;
 
 import org.joml.Matrix4f;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.vkp.racing.math.MathUtil;
+import org.vkp.racing.math.Polygon;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -51,6 +54,32 @@ public class Transform implements Component {
 			mMatrix = new Matrix4f(parent.getModelMatrix()).mul(mMatrix);
 		}
 		return mMatrix;
+	}
+
+	public boolean intersects(Transform other) {
+		Matrix4f thisModelMatrix = getModelMatrix();
+		Matrix4f otherModelMatrix = other.getModelMatrix();
+		Vector4f[] thisCorners = {
+				new Vector4f(-0.5f, 0.5f, 0.0f, 1.0f).mul(thisModelMatrix),
+				new Vector4f(-0.5f, -0.5f, 0.0f, 1.0f).mul(thisModelMatrix),
+				new Vector4f(0.5f, -0.5f, 0.0f, 1.0f).mul(thisModelMatrix),
+				new Vector4f(0.5f, 0.5f, 0.0f, 1.0f).mul(thisModelMatrix),
+		};
+		Vector4f[] otherCorners = {
+				new Vector4f(-0.5f, 0.5f, 0.0f, 1.0f).mul(otherModelMatrix),
+				new Vector4f(-0.5f, -0.5f, 0.0f, 1.0f).mul(otherModelMatrix),
+				new Vector4f(0.5f, -0.5f, 0.0f, 1.0f).mul(otherModelMatrix),
+				new Vector4f(0.5f, 0.5f, 0.0f, 1.0f).mul(otherModelMatrix),
+		};
+
+		Polygon a = new Polygon();
+		Polygon b = new Polygon();
+		for (int i = 0; i < thisCorners.length; i++) {
+			a.getPoints().add(new Vector2f(thisCorners[i].x, thisCorners[i].y));
+			b.getPoints().add(new Vector2f(otherCorners[i].x, otherCorners[i].y));
+		}
+
+		return MathUtil.testPolygonPolygonIntersection(a, b);
 	}
 
 	@Override

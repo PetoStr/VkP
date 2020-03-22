@@ -65,9 +65,9 @@ public class RaceTrackCreator {
 		transform.setWidth(80.0f);
 		transform.setHeight(80.0f);
 
-		float x[] = { 100.0f, 780.0f, 100.0f, 780.0f };
-		float y[] = { 260.0f, 260.0f, 540.0f, 540.0f };
-		float rotation[] = { 0.0f, (float) (Math.PI / 2), (float) -(Math.PI / 2), (float) Math.PI };
+		float[] x = { 100.0f, 780.0f, 100.0f, 780.0f };
+		float[] y = { 260.0f, 260.0f, 540.0f, 540.0f };
+		float[] rotation = { 0.0f, (float) (Math.PI / 2), (float) -(Math.PI / 2), (float) Math.PI };
 
 		for (int i = 0; i < 4; i++) {
 			transform.setRotation(rotation[i]);
