@@ -3,6 +3,7 @@ package org.vkp.racing.ecs.system;
 import java.util.BitSet;
 import java.util.List;
 
+import org.vkp.racing.ecs.component.Component;
 import org.vkp.racing.scene.Scene;
 
 import lombok.Builder;
@@ -26,17 +27,10 @@ public class Dispatcher {
 	}
 
 	private void dispatch(Scene scene, List<GameSystem> systems) {
-		scene.getEntities().forEach((entity, components) -> {
-			BitSet componentIds = new BitSet();
-			components.forEach(component -> componentIds.or(component.getId()));
-
-			systems.forEach(system -> {
-				BitSet conjuction = system.getRequiredComponents();
-				conjuction.and(componentIds);
-				if (conjuction.equals(system.getRequiredComponents())) {
-					system.update(components);
-				}
-			});
+		systems.forEach(system -> {
+			BitSet requiredComponents = system.getRequiredComponents();
+			List<List<Component>> entities = scene.getRequiredEntities(requiredComponents);
+			entities.forEach(system::update);
 		});
 	}
 

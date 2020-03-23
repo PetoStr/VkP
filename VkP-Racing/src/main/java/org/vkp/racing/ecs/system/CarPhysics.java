@@ -2,8 +2,8 @@ package org.vkp.racing.ecs.system;
 
 import java.util.BitSet;
 import java.util.List;
-import java.util.Map;
 
+import org.vkp.racing.ecs.component.BarrierComponent;
 import org.vkp.racing.ecs.component.CarPhysicsComponent;
 import org.vkp.racing.ecs.component.Component;
 import org.vkp.racing.ecs.component.Transform;
@@ -23,9 +23,8 @@ public class CarPhysics implements GameSystem {
 		ComponentGroup componentGroup = new ComponentGroup();
 		componentExtractor.extract(componentGroup, components);
 
-		List<Integer> barrierIds = scene.getBarriers();
-		Map<Integer, List<Component>> entities = scene.getEntities();
-		barrierIds.forEach(id -> processBarrier(components, entities.get(id), componentGroup));
+		List<List<Component>> barriers = scene.getRequiredEntities(BarrierComponent.ID);
+		barriers.forEach(barrier -> processBarrier(components, barrier, componentGroup));
 	}
 
 	@Override
