@@ -19,9 +19,8 @@ public class CarPhysics implements GameSystem {
 
 	@Override
 	public void update(List<Component> components) {
-		ComponentExtractor<ComponentGroup> componentExtractor = new ComponentExtractor<>();
 		ComponentGroup componentGroup = new ComponentGroup();
-		componentExtractor.extract(componentGroup, components);
+		ComponentExtractor.extract(componentGroup, components);
 
 		List<List<Component>> barriers = scene.getRequiredEntities(BarrierComponent.ID);
 		barriers.forEach(barrier -> processBarrier(components, barrier, componentGroup));

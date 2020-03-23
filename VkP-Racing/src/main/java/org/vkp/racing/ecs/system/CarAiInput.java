@@ -14,9 +14,8 @@ public class CarAiInput implements GameSystem {
 
 	@Override
 	public void update(List<Component> components) {
-		ComponentExtractor<ComponentGroup> componentExtractor = new ComponentExtractor<>();
 		ComponentGroup componentGroup = new ComponentGroup();
-		componentExtractor.extract(componentGroup, components);
+		ComponentExtractor.extract(componentGroup, components);
 
 		CarAiComponent carAi = componentGroup.carAi;
 		Transform transform = componentGroup.transform;
@@ -24,7 +23,7 @@ public class CarAiInput implements GameSystem {
 
 		carPhysics.accelerate();
 		long now = System.nanoTime();
-		if (carAi.isDelay() && now - carAi.getStartTime() >= 1e9) {
+		if (carAi.isDelay() && now - carAi.getStartTime() >= 1.2e9) {
 			carAi.setCurrentAngleIndex((carAi.getCurrentAngleIndex() + 1) % ANGLES.length);
 			carAi.setDelay(false);
 		}

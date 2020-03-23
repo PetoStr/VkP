@@ -11,15 +11,19 @@ import org.vkp.engine.window.Window;
 import org.vkp.racing.ecs.component.CarAiComponent;
 import org.vkp.racing.ecs.component.CarKeyboardComponent;
 import org.vkp.racing.ecs.component.CarPhysicsComponent;
+import org.vkp.racing.ecs.component.CheckpointComponent;
 import org.vkp.racing.ecs.component.Component;
+import org.vkp.racing.ecs.component.RacerComponent;
 import org.vkp.racing.ecs.component.TexturedMeshComponent;
 import org.vkp.racing.ecs.component.Transform;
 import org.vkp.racing.ecs.system.CarAiInput;
 import org.vkp.racing.ecs.system.CarKeyboardInput;
 import org.vkp.racing.ecs.system.CarMovementSystem;
 import org.vkp.racing.ecs.system.CarPhysics;
+import org.vkp.racing.ecs.system.CheckpointSystem;
 import org.vkp.racing.ecs.system.Dispatcher;
 import org.vkp.racing.ecs.system.RenderSystem;
+import org.vkp.racing.ecs.system.ScoreRender;
 import org.vkp.racing.scene.Scene;
 
 public class Racing {
@@ -72,15 +76,15 @@ public class Racing {
 		RaceTrackCreator raceTrackCreator = new RaceTrackCreator(scene, assets);
 		raceTrackCreator.createRaceTrack();
 
-		createCars();
+		createCars(raceTrackCreator.getFirstCheckpoint());
 	}
 
-	private void createCars() {
+	private void createCars(CheckpointComponent firstCheckpoint) {
 		TexturedMeshComponent carTexturedMesh = new TexturedMeshComponent(assets.getRedCar());
 		TextureInfo textureInfo = carTexturedMesh.getTexturedMesh().getTexture().getTextureInfo();
 
 		Transform carTransform = new Transform();
-		carTransform.setPosition(new Vector3f(350.0f, 240.0f, 0.0f));
+		carTransform.setPosition(new Vector3f(200.0f, 240.0f, 0.0f));
 		carTransform.setWidth(textureInfo.getWidth() / 20.0f);
 		carTransform.setHeight(textureInfo.getHeight() / 20.0f);
 
@@ -89,16 +93,16 @@ public class Racing {
 		TexturedMesh wheelTexturedMesh = shapeLoader.load(ShapeType.QUAD, black);
 
 		Transform randomAiCarTransform = new Transform();
-		randomAiCarTransform.setPosition(new Vector3f(350.0f, 280.0f, 0.0f));
+		randomAiCarTransform.setPosition(new Vector3f(200.0f, 280.0f, 0.0f));
 		randomAiCarTransform.setWidth(textureInfo.getWidth() / 20.0f);
 		randomAiCarTransform.setHeight(textureInfo.getHeight() / 20.0f);
 
-		createCar(carTransform, wheelTexturedMesh, new CarKeyboardComponent());
-		createCar(randomAiCarTransform, wheelTexturedMesh, new CarAiComponent());
+		createCar(carTransform, wheelTexturedMesh, new CarKeyboardComponent(), firstCheckpoint);
+		createCar(randomAiCarTransform, wheelTexturedMesh, new CarAiComponent(), firstCheckpoint);
 	}
 
 	private void createCar(Transform carTransform, TexturedMesh wheelTexturedMesh,
-			Component inputComponent) {
+			Component inputComponent, CheckpointComponent firstCheckpoint) {
 		float wheelWidth = carTransform.getWidth() / 150;
 		float wheelHeight = carTransform.getHeight() / 100;
 		Transform leftWheelTransform = new Transform();
@@ -129,6 +133,7 @@ public class Racing {
 			.with(new TexturedMeshComponent(assets.getRedCar()))
 			.with(carTransform)
 			.with(new CarPhysicsComponent())
+			.with(new RacerComponent(firstCheckpoint))
 			.with(inputComponent)
 			.build();
 	}
@@ -139,7 +144,9 @@ public class Racing {
 				.gameSystem(new CarKeyboardInput(window.getKeyCallback()))
 				.gameSystem(new CarAiInput())
 				.gameSystem(new CarPhysics(scene))
+				.gameSystem(new CheckpointSystem(scene))
 				.renderSystem(new RenderSystem(gameRenderer))
+				.renderSystem(new ScoreRender(gameRenderer))
 				.build();
 	}
 

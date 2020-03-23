@@ -148,7 +148,7 @@ public class ShapeRenderer extends Renderer {
 	@Override
 	protected void createDescriptorPool() {
 		VkDevice device = vkBase.getDevice().getHandle();
-		descriptorPool = new DescriptorPool(device, 5); // XXX: hard coded
+		descriptorPool = new DescriptorPool(device, 9); // XXX: hard coded
 		descriptorPool.addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 5);
 		descriptorPool.createDescriptorPool(5);
 	}

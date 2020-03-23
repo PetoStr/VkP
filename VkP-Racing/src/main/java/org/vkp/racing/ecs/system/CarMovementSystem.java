@@ -13,9 +13,8 @@ public class CarMovementSystem implements GameSystem {
 
 	@Override
 	public void update(List<Component> components) {
-		ComponentExtractor<ComponentGroup> componentExtractor = new ComponentExtractor<>();
 		ComponentGroup componentGroup = new ComponentGroup();
-		componentExtractor.extract(componentGroup, components);
+		ComponentExtractor.extract(componentGroup, components);
 
 		CarPhysicsComponent carPhysics = componentGroup.carPhysics;
 		Transform transform = componentGroup.transform;

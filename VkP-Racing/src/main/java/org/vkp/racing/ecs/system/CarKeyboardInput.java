@@ -38,9 +38,8 @@ public class CarKeyboardInput implements GameSystem, KeyListener {
 
 	@Override
 	public void update(List<Component> components) {
-		ComponentExtractor<ComponentGroup> componentExtractor = new ComponentExtractor<>();
 		ComponentGroup componentGroup = new ComponentGroup();
-		componentExtractor.extract(componentGroup, components);
+		ComponentExtractor.extract(componentGroup, components);
 
 		for (KeyAction keyAction : recentKeyActions) {
 			if (keyAction.action == GLFW_PRESS) {

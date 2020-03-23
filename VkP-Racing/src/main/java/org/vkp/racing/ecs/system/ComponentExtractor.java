@@ -8,7 +8,11 @@ import org.vkp.racing.ecs.component.Component;
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2
-public class ComponentExtractor<T> {
+public class ComponentExtractor {
+
+	private ComponentExtractor() {
+
+	}
 
 	public static Component extractOne(Class<?> type, List<Component> components) {
 		for (Component component : components) {
@@ -18,11 +22,11 @@ public class ComponentExtractor<T> {
 		return null;
 	}
 
-	public void extract(T componentGroup, List<Component> components) {
+	public static <T> void extract(T componentGroup, List<Component> components) {
 		components.forEach(component -> setMatchingField(componentGroup, component));
 	}
 
-	private void setMatchingField(T componentGroup, Component component) {
+	private static <T> void setMatchingField(T componentGroup, Component component) {
 		Field[] fields = componentGroup.getClass().getFields();
 
 		for (Field field : fields) {

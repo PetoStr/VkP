@@ -9,13 +9,13 @@ import org.vkp.engine.loader.ShapeType;
 import org.vkp.engine.mesh.TexturedMesh;
 import org.vkp.engine.texture.Color;
 import org.vkp.racing.ecs.component.BarrierComponent;
+import org.vkp.racing.ecs.component.CheckpointComponent;
 import org.vkp.racing.ecs.component.TexturedMeshComponent;
 import org.vkp.racing.ecs.component.Transform;
 import org.vkp.racing.scene.Scene;
 
-import lombok.AllArgsConstructor;
+import lombok.Getter;
 
-@AllArgsConstructor
 public class RaceTrackCreator {
 
 	private Scene scene;
@@ -25,6 +25,16 @@ public class RaceTrackCreator {
 	private final List<Transform> roadTransforms = new ArrayList<>();
 	private final List<Transform> roadCornerTransforms = new ArrayList<>();
 
+	private CheckpointComponent previousCheckpoint;
+
+	@Getter
+	private CheckpointComponent firstCheckpoint;
+
+	public RaceTrackCreator(Scene scene, Assets assets) {
+		this.scene = scene;
+		this.assets = assets;
+	}
+
 	public void createRaceTrack() {
 		ShapeLoader shapeLoader = assets.getShapeLoader();
 		Color lightGrey = new Color(211, 211, 211);
@@ -33,7 +43,8 @@ public class RaceTrackCreator {
 		prepareRoadTransforms();
 		prepareRoadCornerTransforms();
 
-		roadTransforms.forEach(transform -> createRoad(transform, wallTexturedMesh));
+		roadTransforms.forEach(transform -> createRoad(transform, wallTexturedMesh,
+				wallTexturedMesh));
 		roadCornerTransforms.forEach(transform -> createRoadCorner(transform, wallTexturedMesh));
 
 		roadTransforms.clear();
@@ -45,19 +56,25 @@ public class RaceTrackCreator {
 		transform.setWidth(80.0f);
 		transform.setHeight(200.0f);
 
-		transform.setPosition(new Vector3f(100.0f, 400.0f, 0.0f));
-		roadTransforms.add(copyTransform(transform));
-
-		transform.setPosition(new Vector3f(780.0f, 400.0f, 0.0f));
-		roadTransforms.add(copyTransform(transform));
-
 		transform.setRotation((float) (Math.PI / 2));
 		for (int i = 0; i < 3; i++) {
 			transform.setPosition(new Vector3f(240.0f + i * 200.0f, 260.0f, 0.0f));
 			roadTransforms.add(copyTransform(transform));
+		}
+
+		transform.setRotation((float) Math.PI);
+		transform.setPosition(new Vector3f(780.0f, 400.0f, 0.0f));
+		roadTransforms.add(copyTransform(transform));
+
+		transform.setRotation((float) -(Math.PI / 2));
+		for (int i = 2; i >= 0; i--) {
 			transform.setPosition(new Vector3f(240.0f + i * 200.0f, 540.0f, 0.0f));
 			roadTransforms.add(copyTransform(transform));
 		}
+
+		transform.setRotation(0.0f);
+		transform.setPosition(new Vector3f(100.0f, 400.0f, 0.0f));
+		roadTransforms.add(copyTransform(transform));
 	}
 
 	private void prepareRoadCornerTransforms() {
@@ -86,7 +103,8 @@ public class RaceTrackCreator {
 		return res;
 	}
 
-	private void createRoad(Transform transform, TexturedMesh wallTexturedMesh) {
+	private void createRoad(Transform transform, TexturedMesh wallTexturedMesh,
+			TexturedMesh checkpointTexturedMesh) {
 		Transform roadTransform = copyTransform(transform);
 		Transform leftWallTransform = new Transform();
 		leftWallTransform.setParent(roadTransform);
@@ -100,8 +118,31 @@ public class RaceTrackCreator {
 		rightWallTransform.setWidth(0.05f);
 		rightWallTransform.setHeight(1.0f);
 
+		Transform currentCheckpointTransform = new Transform();
+		currentCheckpointTransform.setParent(roadTransform);
+		currentCheckpointTransform.setWidth(1.0f);
+		currentCheckpointTransform.setHeight(0.02f);
+
+		Transform otherCheckpointTransform = new Transform();
+		otherCheckpointTransform.setParent(roadTransform);
+		otherCheckpointTransform.setWidth(1.0f);
+		otherCheckpointTransform.setHeight(0.02f);
+		otherCheckpointTransform.setPosition(new Vector3f(0.0f, -0.49f, 0.0f));
+
 		roadTransform.getChildren().add(leftWallTransform);
 		roadTransform.getChildren().add(rightWallTransform);
+		roadTransform.getChildren().add(currentCheckpointTransform);
+		roadTransform.getChildren().add(otherCheckpointTransform);
+
+		CheckpointComponent otherCheckpoint = new CheckpointComponent(firstCheckpoint);
+		CheckpointComponent currentCheckpoint = new CheckpointComponent(otherCheckpoint);
+		if (previousCheckpoint != null) {
+			previousCheckpoint.setNextCheckpoint(currentCheckpoint);
+		}
+		previousCheckpoint = otherCheckpoint;
+		if (firstCheckpoint == null) {
+			firstCheckpoint = currentCheckpoint;
+		}
 
 		scene.createEntity()
 			.with(new TexturedMeshComponent(assets.getRoad()))
@@ -118,6 +159,18 @@ public class RaceTrackCreator {
 			.with(new TexturedMeshComponent(wallTexturedMesh))
 			.with(rightWallTransform)
 			.with(new BarrierComponent())
+			.build();
+
+		scene.createEntity()
+			.with(new TexturedMeshComponent(checkpointTexturedMesh))
+			.with(currentCheckpointTransform)
+			.with(currentCheckpoint)
+			.build();
+
+		scene.createEntity()
+			.with(new TexturedMeshComponent(checkpointTexturedMesh))
+			.with(otherCheckpointTransform)
+			.with(otherCheckpoint)
 			.build();
 	}
 
