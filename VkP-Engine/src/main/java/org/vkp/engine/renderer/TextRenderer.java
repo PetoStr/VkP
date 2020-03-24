@@ -1,38 +1,18 @@
 package org.vkp.engine.renderer;
 
-import static org.lwjgl.system.MemoryUtil.memAddress;
-import static org.lwjgl.system.MemoryUtil.memAllocFloat;
-import static org.lwjgl.system.MemoryUtil.memAllocLong;
-import static org.lwjgl.system.MemoryUtil.memAllocPointer;
-import static org.lwjgl.system.MemoryUtil.memCopy;
-import static org.lwjgl.system.MemoryUtil.memFree;
-import static org.lwjgl.vulkan.VK10.VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-import static org.lwjgl.vulkan.VK10.VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-import static org.lwjgl.vulkan.VK10.VK_FORMAT_R32G32_SFLOAT;
-import static org.lwjgl.vulkan.VK10.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-import static org.lwjgl.vulkan.VK10.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
-import static org.lwjgl.vulkan.VK10.VK_PIPELINE_BIND_POINT_GRAPHICS;
-import static org.lwjgl.vulkan.VK10.VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
-import static org.lwjgl.vulkan.VK10.VK_SHADER_STAGE_FRAGMENT_BIT;
-import static org.lwjgl.vulkan.VK10.VK_SHADER_STAGE_VERTEX_BIT;
-import static org.lwjgl.vulkan.VK10.VK_VERTEX_INPUT_RATE_VERTEX;
-import static org.lwjgl.vulkan.VK10.vkCmdBindDescriptorSets;
-import static org.lwjgl.vulkan.VK10.vkCmdBindPipeline;
-import static org.lwjgl.vulkan.VK10.vkCmdBindVertexBuffers;
-import static org.lwjgl.vulkan.VK10.vkCmdDraw;
-import static org.lwjgl.vulkan.VK10.vkCmdSetScissor;
-import static org.lwjgl.vulkan.VK10.vkCmdSetViewport;
-
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.LongBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.vulkan.VkDevice;
 import org.lwjgl.vulkan.VkExtent2D;
 import org.lwjgl.vulkan.VkOffset2D;
+import org.lwjgl.vulkan.VkPushConstantRange;
 import org.lwjgl.vulkan.VkRect2D;
 import org.lwjgl.vulkan.VkVertexInputAttributeDescription;
 import org.lwjgl.vulkan.VkVertexInputBindingDescription;
@@ -49,6 +29,32 @@ import org.vkp.engine.vulkan.descriptor.DescriptorSetLayout;
 import org.vkp.engine.vulkan.pipeline.ShaderModule;
 import org.vkp.engine.vulkan.pipeline.VulkanPipeline;
 import org.vkp.engine.vulkan.swapchain.SwapChain;
+
+import static org.lwjgl.vulkan.VK10.VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+import static org.lwjgl.vulkan.VK10.VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+import static org.lwjgl.vulkan.VK10.VK_FORMAT_R32G32_SFLOAT;
+import static org.lwjgl.vulkan.VK10.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+import static org.lwjgl.vulkan.VK10.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+import static org.lwjgl.vulkan.VK10.VK_PIPELINE_BIND_POINT_GRAPHICS;
+import static org.lwjgl.vulkan.VK10.VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
+import static org.lwjgl.vulkan.VK10.VK_SHADER_STAGE_FRAGMENT_BIT;
+import static org.lwjgl.vulkan.VK10.VK_SHADER_STAGE_VERTEX_BIT;
+import static org.lwjgl.vulkan.VK10.VK_VERTEX_INPUT_RATE_VERTEX;
+import static org.lwjgl.vulkan.VK10.vkCmdBindDescriptorSets;
+import static org.lwjgl.vulkan.VK10.vkCmdBindPipeline;
+import static org.lwjgl.vulkan.VK10.vkCmdBindVertexBuffers;
+import static org.lwjgl.vulkan.VK10.vkCmdDraw;
+import static org.lwjgl.vulkan.VK10.vkCmdPushConstants;
+import static org.lwjgl.vulkan.VK10.vkCmdSetScissor;
+import static org.lwjgl.vulkan.VK10.vkCmdSetViewport;
+
+import static org.lwjgl.system.MemoryUtil.memAddress;
+import static org.lwjgl.system.MemoryUtil.memAlloc;
+import static org.lwjgl.system.MemoryUtil.memAllocFloat;
+import static org.lwjgl.system.MemoryUtil.memAllocLong;
+import static org.lwjgl.system.MemoryUtil.memAllocPointer;
+import static org.lwjgl.system.MemoryUtil.memCopy;
+import static org.lwjgl.system.MemoryUtil.memFree;
 
 public class TextRenderer extends Renderer {
 
@@ -69,6 +75,14 @@ public class TextRenderer extends Renderer {
 	private int currentFrame;
 
 	private int characterCount;
+
+	public static class PushConstants {
+
+		public static final int BYTES = 16 * 4;
+
+		public Matrix4f pMatrix;
+
+	}
 
 	public TextRenderer(VkBase vkBase) {
 		super(vkBase);
@@ -94,17 +108,24 @@ public class TextRenderer extends Renderer {
 
 	@Override
 	public void begin() {
+		super.begin();
 		currentFrame = vkBase.getSwapChain().getCurrentFrame();
 
 		long size = vertexData[currentFrame].vertexBuffer.getSize();
 		vertexData[currentFrame].vertexBuffer.mapMemory(size, vertexData[currentFrame].data);
 	}
 
+	public void addProjectionMatrix(Matrix4f projectionMatrix) {
+		ByteBuffer pPushConstants = memAlloc(PushConstants.BYTES);
+		projectionMatrix.get(pPushConstants);
+
+		vkCmdPushConstants(currentCommandBuffer,
+				   graphicsPipeline.getPipelineLayout(),
+				   VK_SHADER_STAGE_VERTEX_BIT, 0, pPushConstants);
+	}
+
 	public void addText(Text text) {
 		FloatBuffer data = memAllocFloat(16);
-
-		VkExtent2D extent = vkBase.getSwapChain().getExtent();
-		float ratio = (float) extent.width() / extent.height();
 
 		float x = text.getPosition().x;
 		float y = text.getPosition().y;
@@ -115,9 +136,9 @@ public class TextRenderer extends Renderer {
 			float w = (float) glyph.getWidth() / 512 * text.getScale();
 			float h = (float) glyph.getHeight() / 512 * text.getScale();
 
-			float x0 = x + (float) glyph.getXOffset() / 512 * text.getScale() / ratio;
+			float x0 = x + (float) glyph.getXOffset() / 512 * text.getScale();
 			float y0 = y + (float) glyph.getYOffset() / 512 * text.getScale();
-			float x1 = x0 + w / ratio;
+			float x1 = x0 + w;
 			float y1 = y0 + h;
 			float s0 = (float) glyph.getX() / 512;
 			float t0 = (float) glyph.getY() / 512;
@@ -147,7 +168,7 @@ public class TextRenderer extends Renderer {
 			memCopy(memAddress(data),
 					vertexData[currentFrame].data.get(0) + characterCount * 64, 64);
 
-			x += (float) glyph.getXAdvance() / 512 / ratio * text.getScale();
+			x += (float) glyph.getXAdvance() / 512 * text.getScale();
 
 			characterCount++;
 		}
@@ -161,8 +182,6 @@ public class TextRenderer extends Renderer {
 
 	@Override
 	public void end() {
-		super.begin();
-
 		vertexData[currentFrame].vertexBuffer.unmapMemory();
 
 		SwapChain swapChain = vkBase.getSwapChain();
@@ -200,8 +219,6 @@ public class TextRenderer extends Renderer {
 		for (int i = 0; i < characterCount; i++) {
 			vkCmdDraw(currentCommandBuffer, 4, 1, i * 4, 0);
 		}
-
-		super.end();
 
 		characterCount = 0;
 
@@ -248,6 +265,11 @@ public class TextRenderer extends Renderer {
 		LongBuffer layouts = memAllocLong(1);
 		layouts.put(combinedImageSamplerLayout.getHandle()).flip();
 
+		VkPushConstantRange.Buffer pushConstantRanges = VkPushConstantRange.calloc(1)
+				.stageFlags(VK_SHADER_STAGE_VERTEX_BIT)
+				.size(PushConstants.BYTES)
+				.offset(0);
+
 		VkVertexInputBindingDescription.Buffer bindingDescriptions = VkVertexInputBindingDescription.calloc(1)
 				.binding(0)
 				.stride(Float.BYTES * 4)
@@ -274,12 +296,13 @@ public class TextRenderer extends Renderer {
 		graphicsPipeline.addShaderModule(fragmentShaderModule);
 		graphicsPipeline.setBindingDescriptions(bindingDescriptions);
 		graphicsPipeline.setAttributeDescriptions(attributeDescriptions);
-		graphicsPipeline.createPipelineLayout(layouts, null);
+		graphicsPipeline.createPipelineLayout(layouts, pushConstantRanges);
 		graphicsPipeline.createPipeline(vkBase.getRenderPass(),
 				VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP);
 
 		attributeDescriptions.free();
 		bindingDescriptions.free();
+		pushConstantRanges.free();
 		memFree(layouts);
 	}
 

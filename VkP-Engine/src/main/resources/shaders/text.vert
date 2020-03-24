@@ -9,8 +9,12 @@ out gl_PerVertex {
 
 layout(location = 0) out vec2 out_uv;
 
+layout (std140, push_constant) uniform push_constants {
+	mat4 p_matrix;
+} push_consts;
+
 void main(void)
 {
-	gl_Position = vec4(in_pos, 0.99, 1.0);
+	gl_Position = push_consts.p_matrix * vec4(in_pos, 0.0, 1.0);
 	out_uv = in_uv;
 }

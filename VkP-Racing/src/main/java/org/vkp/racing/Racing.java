@@ -173,7 +173,7 @@ public class Racing {
 			dispatcher.dispatchRenderSystems(scene);
 			dispatcher.finishSystems();
 
-			gameRenderer.drawText("FPS: " + fps, -1.0f, -1.0f, 0.5f);
+			gameRenderer.drawText("FPS: " + fps, 5.0f, 5.0f, 200.0f);
 			gameRenderer.draw(scene.getCamera());
 			frames++;
 			long diffTime = now - startTime;

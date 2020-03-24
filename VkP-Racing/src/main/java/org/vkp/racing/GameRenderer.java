@@ -52,8 +52,10 @@ public class GameRenderer {
 		}
 
 		VkExtent2D extent = vkBase.getSwapChain().getExtent();
+		Matrix4f pMatrix = new Matrix4f().ortho2D(0.0f, extent.width(), 0.0f, extent.height());
+
 		ShapeRenderer.PushConstants constants = new ShapeRenderer.PushConstants();
-		constants.pMatrix = new Matrix4f().ortho2D(0.0f, extent.width(), 0.0f, extent.height());
+		constants.pMatrix = pMatrix;
 		constants.vMatrix = camera.getViewMatrix();
 		shapeRenderer.begin();
 		for (TexturedModel texturedModel : texturedModelsToDraw) {
@@ -63,6 +65,7 @@ public class GameRenderer {
 		shapeRenderer.end();
 
 		textRenderer.begin();
+		textRenderer.addProjectionMatrix(pMatrix);
 		for (Text text : textsToDraw) {
 			textRenderer.addText(text);
 		}

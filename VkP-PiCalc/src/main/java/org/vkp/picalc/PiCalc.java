@@ -7,6 +7,7 @@ import org.joml.Matrix4f;
 import org.joml.Vector2d;
 import org.lwjgl.vulkan.VkExtent2D;
 import org.vkp.engine.Camera;
+import org.vkp.engine.Config;
 import org.vkp.engine.VkBase;
 import org.vkp.engine.loader.ShapeLoader;
 import org.vkp.engine.loader.ShapeType;
@@ -124,8 +125,9 @@ public class PiCalc {
 
 
 			VkExtent2D extent = vkBase.getSwapChain().getExtent();
+			Matrix4f pMatrix = new Matrix4f().ortho2D(0.0f, extent.width(), 0.0f, extent.height());
 			ShapeRenderer.PushConstants constants = new ShapeRenderer.PushConstants();
-			constants.pMatrix = new Matrix4f().ortho2D(0.0f, extent.width(), 0.0f, extent.height());
+			constants.pMatrix = pMatrix;
 			constants.vMatrix = camera.getViewMatrix();
 			shapeRenderer.begin();
 			for (Block block : blocks) {
@@ -135,12 +137,28 @@ public class PiCalc {
 			shapeRenderer.end();
 
 			textRenderer.begin();
-			textRenderer.addText("FPS: " + fps, -1.0f, -1.0f, 0.5f);
-			textRenderer.addText("Collisions: " + collisions, -0.2f, -1.0f, 0.5f);
-			textRenderer.addText(blockA.getMass() + " kg", -1.0f, -0.9f, 0.5f);
-			textRenderer.addText(String.valueOf(blockA.getSpeed()), -1.0f, -0.8f, 0.5f);
-			textRenderer.addText(blockB.getMass() + " kg", 0.4f, -0.9f, 0.5f);
-			textRenderer.addText(String.valueOf(blockB.getSpeed()), 0.4f, -0.8f, 0.5f);
+			textRenderer.addProjectionMatrix(pMatrix);
+
+			float x = 5.0f;
+			float y = 5.0f;
+			float scale = 200.0f;
+			textRenderer.addText("FPS: " + fps, x, y, scale);
+
+			x = Config.WIDTH / 2.0f - 120.0f;
+			textRenderer.addText("Collisions: " + collisions, x, y, scale);
+
+			x = 5.0f;
+			y += 40.0f;
+			textRenderer.addText(blockA.getMass() + " kg", x, y, scale);
+			y += 40.0f;
+			textRenderer.addText(String.valueOf(blockA.getSpeed()), x, y, scale);
+
+			x = Config.WIDTH - 430.0f;
+			y = 45.0f;
+			textRenderer.addText(blockB.getMass() + " kg", x, y, scale);
+			y += 40.0f;
+			textRenderer.addText(String.valueOf(blockB.getSpeed()), x, y, scale);
+
 			textRenderer.end();
 
 			vkBase.submitFrame();

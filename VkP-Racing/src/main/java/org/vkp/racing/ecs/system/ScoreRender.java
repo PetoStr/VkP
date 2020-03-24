@@ -4,7 +4,6 @@ import java.util.BitSet;
 import java.util.List;
 
 import org.joml.Vector3f;
-import org.vkp.engine.Config;
 import org.vkp.racing.GameRenderer;
 import org.vkp.racing.ecs.component.Component;
 import org.vkp.racing.ecs.component.RacerComponent;
@@ -23,14 +22,13 @@ public class ScoreRender implements GameSystem {
 		ComponentGroup componentGroup = new ComponentGroup();
 		ComponentExtractor.extract(componentGroup, components);
 
-		Vector3f position = new Vector3f(componentGroup.transform.getPosition());
-		position.x /= Config.WIDTH;
-		position.y /= Config.HEIGHT;
-		position.x = 2 * position.x - 1 - 0.035f;
-		position.y = 2 * position.y - 1 - 0.055f;
+		Transform transform = componentGroup.transform;
+		Vector3f position = new Vector3f(transform.getPosition());
+		position.x -= transform.getWidth();
+		position.y -= transform.getHeight() * 1.5f;
 		String text = "Score: " + componentGroup.racer.getScore();
 
-		gameRenderer.drawText(text, position.x, position.y, 0.2f);
+		gameRenderer.drawText(text, position.x, position.y, 80.0f);
 	}
 
 	@Override
