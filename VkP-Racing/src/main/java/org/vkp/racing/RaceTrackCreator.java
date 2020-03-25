@@ -40,11 +40,14 @@ public class RaceTrackCreator {
 		Color lightGrey = new Color(211, 211, 211);
 		TexturedMesh wallTexturedMesh = shapeLoader.load(ShapeType.QUAD, lightGrey);
 
+		Color grey = new Color(128, 128, 128);
+		TexturedMesh checkpointTexturedMesh = shapeLoader.load(ShapeType.QUAD, grey);
+
 		prepareRoadTransforms();
 		prepareRoadCornerTransforms();
 
 		roadTransforms.forEach(transform -> createRoad(transform, wallTexturedMesh,
-				wallTexturedMesh));
+				checkpointTexturedMesh));
 		roadCornerTransforms.forEach(transform -> createRoadCorner(transform, wallTexturedMesh));
 
 		roadTransforms.clear();
@@ -150,18 +153,6 @@ public class RaceTrackCreator {
 			.build();
 
 		scene.createEntity()
-			.with(new TexturedMeshComponent(wallTexturedMesh))
-			.with(leftWallTransform)
-			.with(new BarrierComponent())
-			.build();
-
-		scene.createEntity()
-			.with(new TexturedMeshComponent(wallTexturedMesh))
-			.with(rightWallTransform)
-			.with(new BarrierComponent())
-			.build();
-
-		scene.createEntity()
 			.with(new TexturedMeshComponent(checkpointTexturedMesh))
 			.with(currentCheckpointTransform)
 			.with(currentCheckpoint)
@@ -171,6 +162,18 @@ public class RaceTrackCreator {
 			.with(new TexturedMeshComponent(checkpointTexturedMesh))
 			.with(otherCheckpointTransform)
 			.with(otherCheckpoint)
+			.build();
+
+		scene.createEntity()
+			.with(new TexturedMeshComponent(wallTexturedMesh))
+			.with(leftWallTransform)
+			.with(new BarrierComponent())
+			.build();
+
+		scene.createEntity()
+			.with(new TexturedMeshComponent(wallTexturedMesh))
+			.with(rightWallTransform)
+			.with(new BarrierComponent())
 			.build();
 	}
 
