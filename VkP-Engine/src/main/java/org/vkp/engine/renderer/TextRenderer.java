@@ -24,7 +24,6 @@ import org.vkp.engine.font.Glyph;
 import org.vkp.engine.font.Text;
 import org.vkp.engine.texture.Texture;
 import org.vkp.engine.vulkan.buffer.VulkanBuffer;
-import org.vkp.engine.vulkan.descriptor.DescriptorPool;
 import org.vkp.engine.vulkan.descriptor.DescriptorSetLayout;
 import org.vkp.engine.vulkan.pipeline.ShaderModule;
 import org.vkp.engine.vulkan.pipeline.VulkanPipeline;
@@ -101,8 +100,9 @@ public class TextRenderer extends Renderer {
 		String fragmentShaderPath = "shaders/text.frag.spv";
 		createPipeline(vertexShaderPath, fragmentShaderPath);
 		createVertexBuffers();
+		long descriptorPool = vkBase.getDevice().getDescriptorPool().getHandle();
 		fontTexture = vkBase.getTextureLoader().loadTexture("fonts/dejavusans.png",
-				descriptorPool.getHandle(), combinedImageSamplerLayout);
+				descriptorPool, combinedImageSamplerLayout);
 		glyphs = FntParser.parseFntFile("fonts/dejavusans.fnt");
 	}
 
@@ -251,14 +251,6 @@ public class TextRenderer extends Renderer {
 		combinedImageSamplerLayout.addLayoutBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 				VK_SHADER_STAGE_FRAGMENT_BIT);
 		combinedImageSamplerLayout.createDescriptorSetLayout();
-	}
-
-	@Override
-	protected void createDescriptorPool() {
-		VkDevice device = vkBase.getDevice().getHandle();
-		descriptorPool = new DescriptorPool(device, 1);
-		descriptorPool.addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1);
-		descriptorPool.createDescriptorPool(1);
 	}
 
 	private void createPipeline(String vertexShaderPath, String fragmentShaderPath) {

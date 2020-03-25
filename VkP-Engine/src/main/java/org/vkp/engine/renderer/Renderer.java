@@ -2,14 +2,8 @@ package org.vkp.engine.renderer;
 
 import org.lwjgl.vulkan.VkCommandBuffer;
 import org.vkp.engine.VkBase;
-import org.vkp.engine.vulkan.descriptor.DescriptorPool;
-
-import lombok.Getter;
 
 public abstract class Renderer {
-
-	@Getter
-	public DescriptorPool descriptorPool;
 
 	protected VkBase vkBase;
 
@@ -21,11 +15,9 @@ public abstract class Renderer {
 
 	public void init() {
 		createDescriptorSetLayouts();
-		createDescriptorPool();
 	}
 
 	public void cleanup() {
-		descriptorPool.cleanup();
 	}
 
 	public void begin() {
@@ -36,6 +28,5 @@ public abstract class Renderer {
 	}
 
 	protected abstract void createDescriptorSetLayouts();
-	protected abstract void createDescriptorPool();
 
 }

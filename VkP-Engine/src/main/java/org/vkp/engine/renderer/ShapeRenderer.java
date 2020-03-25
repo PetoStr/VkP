@@ -16,7 +16,6 @@ import org.lwjgl.vulkan.VkViewport;
 import org.vkp.engine.VkBase;
 import org.vkp.engine.mesh.Mesh;
 import org.vkp.engine.mesh.TexturedMesh;
-import org.vkp.engine.vulkan.descriptor.DescriptorPool;
 import org.vkp.engine.vulkan.descriptor.DescriptorSetLayout;
 import org.vkp.engine.vulkan.pipeline.ShaderModule;
 import org.vkp.engine.vulkan.pipeline.VulkanPipeline;
@@ -143,14 +142,6 @@ public class ShapeRenderer extends Renderer {
 		combinedImageSamplerLayout.addLayoutBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 				VK_SHADER_STAGE_FRAGMENT_BIT);
 		combinedImageSamplerLayout.createDescriptorSetLayout();
-	}
-
-	@Override
-	protected void createDescriptorPool() {
-		VkDevice device = vkBase.getDevice().getHandle();
-		descriptorPool = new DescriptorPool(device, 9); // XXX: hard coded
-		descriptorPool.addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 5);
-		descriptorPool.createDescriptorPool(5);
 	}
 
 	private void recordDrawMesh(VkCommandBuffer commandBuffer, Mesh mesh) {

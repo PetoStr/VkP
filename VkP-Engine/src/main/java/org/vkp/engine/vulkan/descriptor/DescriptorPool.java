@@ -19,24 +19,26 @@ public class DescriptorPool {
 
 	@Getter
 	private long handle;
-	
+
 	private VkDevice device;
-	
+
 	private VkDescriptorPoolSize.Buffer poolSizes;
-	
+
+	private int maxSets;
+
 	public DescriptorPool(VkDevice device, int poolSizeCount) {
 		this.device = device;
 		poolSizes = VkDescriptorPoolSize.calloc(poolSizeCount);
 	}
-	
-	public void createDescriptorPool(int sets) {
+
+	public void createDescriptorPool() {
 		poolSizes.flip();
-		
+
 		VkDescriptorPoolCreateInfo poolCreateInfo = VkDescriptorPoolCreateInfo.calloc()
 				.sType(VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO)
-				.maxSets(sets)
+				.maxSets(maxSets)
 				.pPoolSizes(poolSizes);
-		
+
 		LongBuffer pHandle = memAllocLong(1);
 		vkCheck(vkCreateDescriptorPool(device, poolCreateInfo, null, pHandle));
 		this.handle = pHandle.get(0);
@@ -44,16 +46,18 @@ public class DescriptorPool {
 		poolCreateInfo.free();
 		poolSizes.free();
 	}
-	
+
 	public void addPoolSize(int type, int descriptorCount) {
 		VkDescriptorPoolSize poolSize = VkDescriptorPoolSize.calloc()
 				.type(type)
 				.descriptorCount(descriptorCount);
 		poolSizes.put(poolSize);
+
+		maxSets += descriptorCount;
 	}
-	
+
 	public void cleanup() {
 		vkDestroyDescriptorPool(device, handle, null);
 	}
-	
+
 }

@@ -23,9 +23,11 @@ import org.lwjgl.vulkan.VkDeviceQueueCreateInfo;
 import org.lwjgl.vulkan.VkPhysicalDeviceFeatures;
 import org.lwjgl.vulkan.VkQueue;
 import org.vkp.engine.Config;
+import org.vkp.engine.vulkan.descriptor.DescriptorPool;
 import org.vkp.engine.vulkan.pool.CommandPool;
 
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 public class LogicalDevice {
@@ -39,6 +41,10 @@ public class LogicalDevice {
 	private VkQueue presentQueue;
 
 	private CommandPool commandPool;
+
+	@Getter
+	@Setter
+	private DescriptorPool descriptorPool;
 
 	public LogicalDevice(PhysicalDevice physicalDevice) {
 		graphicsQueueIndex = physicalDevice.getQueueFamilyProperties().getGraphicsQueueIndex();
@@ -106,6 +112,7 @@ public class LogicalDevice {
 	}
 
 	public void cleanup() {
+		descriptorPool.cleanup();
 		commandPool.cleanup();
 		vkDestroyDevice(handle, null);
 	}

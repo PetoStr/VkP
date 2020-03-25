@@ -3,6 +3,8 @@ package org.vkp.engine;
 import static org.lwjgl.glfw.GLFWVulkan.glfwCreateWindowSurface;
 import static org.lwjgl.system.MemoryUtil.memAllocLong;
 import static org.lwjgl.system.MemoryUtil.memFree;
+
+import static org.lwjgl.vulkan.VK10.VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 import static org.lwjgl.vulkan.VK10.VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 import static org.lwjgl.vulkan.VK10.VK_SUBPASS_CONTENTS_INLINE;
 import static org.lwjgl.vulkan.VK10.vkCmdBeginRenderPass;
@@ -26,6 +28,7 @@ import org.vkp.engine.vulkan.RenderPass;
 import org.vkp.engine.vulkan.VulkanInstance;
 import org.vkp.engine.vulkan.buffer.BufferCreator;
 import org.vkp.engine.vulkan.command.StagingBufferCommand;
+import org.vkp.engine.vulkan.descriptor.DescriptorPool;
 import org.vkp.engine.vulkan.device.LogicalDevice;
 import org.vkp.engine.vulkan.device.PhysicalDevice;
 import org.vkp.engine.vulkan.image.ImageCreator;
@@ -80,6 +83,11 @@ public class VkBase {
 		stagingBufferCommand = new StagingBufferCommand(device.getHandle(),
 				device.getGraphicsQueue(), commandBuffer, physicalDevice.getMemoryProperties());
 
+		DescriptorPool descriptorPool = new DescriptorPool(device.getHandle(), 1);
+		descriptorPool.addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 20); // XXX: hard coded
+		descriptorPool.createDescriptorPool();
+		device.setDescriptorPool(descriptorPool);
+
 		bufferCreator = new BufferCreator(device.getHandle(), physicalDevice.getMemoryProperties());
 		imageCreator = new ImageCreator(device.getHandle(), physicalDevice.getMemoryProperties());
 
@@ -90,8 +98,8 @@ public class VkBase {
 		textRenderer = new TextRenderer(this);
 		textRenderer.init();
 
-		shapeLoader = new ShapeLoader(stagingBufferCommand, shapeRenderer,
-				bufferCreator, textureLoader);
+		shapeLoader = new ShapeLoader(stagingBufferCommand, descriptorPool.getHandle(),
+				shapeRenderer.getCombinedImageSamplerLayout(), bufferCreator, textureLoader);
 	}
 
 	public boolean beginFrame() {
