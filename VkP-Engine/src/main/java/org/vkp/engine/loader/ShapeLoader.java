@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.vkp.engine.mesh.Arrow;
 import org.vkp.engine.mesh.Circle;
+import org.vkp.engine.mesh.Line;
 import org.vkp.engine.mesh.Mesh;
 import org.vkp.engine.mesh.Quad;
 import org.vkp.engine.mesh.TexturedMesh;
@@ -73,6 +74,9 @@ public class ShapeLoader {
 				break;
 			case ARROW:
 				shapeMesh = new Arrow(bufferCreator, stagingBufferCommand);
+				break;
+			case LINE:
+				shapeMesh = new Line(bufferCreator, stagingBufferCommand);
 				break;
 
 		}

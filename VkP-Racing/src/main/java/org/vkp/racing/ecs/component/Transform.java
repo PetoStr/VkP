@@ -56,28 +56,26 @@ public class Transform implements Component {
 		return mMatrix;
 	}
 
-	public boolean intersects(Transform other) {
-		Matrix4f thisModelMatrix = getModelMatrix();
-		Matrix4f otherModelMatrix = other.getModelMatrix();
-		Vector4f[] thisCorners = {
-				new Vector4f(-0.5f, 0.5f, 0.0f, 1.0f).mul(thisModelMatrix),
-				new Vector4f(-0.5f, -0.5f, 0.0f, 1.0f).mul(thisModelMatrix),
-				new Vector4f(0.5f, -0.5f, 0.0f, 1.0f).mul(thisModelMatrix),
-				new Vector4f(0.5f, 0.5f, 0.0f, 1.0f).mul(thisModelMatrix),
-		};
-		Vector4f[] otherCorners = {
-				new Vector4f(-0.5f, 0.5f, 0.0f, 1.0f).mul(otherModelMatrix),
-				new Vector4f(-0.5f, -0.5f, 0.0f, 1.0f).mul(otherModelMatrix),
-				new Vector4f(0.5f, -0.5f, 0.0f, 1.0f).mul(otherModelMatrix),
-				new Vector4f(0.5f, 0.5f, 0.0f, 1.0f).mul(otherModelMatrix),
+	public Polygon getPolygon() {
+		Matrix4f modelMatrix = getModelMatrix();
+		Vector4f[] corners = {
+				new Vector4f(-0.5f, 0.5f, 0.0f, 1.0f).mul(modelMatrix),
+				new Vector4f(-0.5f, -0.5f, 0.0f, 1.0f).mul(modelMatrix),
+				new Vector4f(0.5f, -0.5f, 0.0f, 1.0f).mul(modelMatrix),
+				new Vector4f(0.5f, 0.5f, 0.0f, 1.0f).mul(modelMatrix),
 		};
 
-		Polygon a = new Polygon();
-		Polygon b = new Polygon();
-		for (int i = 0; i < thisCorners.length; i++) {
-			a.getPoints().add(new Vector2f(thisCorners[i].x, thisCorners[i].y));
-			b.getPoints().add(new Vector2f(otherCorners[i].x, otherCorners[i].y));
+		Polygon polygon = new Polygon();
+		for (int i = 0; i < corners.length; i++) {
+			polygon.getPoints().add(new Vector2f(corners[i].x, corners[i].y));
 		}
+
+		return polygon;
+	}
+
+	public boolean intersects(Transform other) {
+		Polygon a = getPolygon();
+		Polygon b = other.getPolygon();
 
 		return MathUtil.testPolygonPolygonIntersection(a, b);
 	}

@@ -5,6 +5,7 @@ public enum ShapeType {
 	QUAD,
 	TRIANGLE,
 	CIRCLE,
-	ARROW
+	ARROW,
+	LINE
 
 }
