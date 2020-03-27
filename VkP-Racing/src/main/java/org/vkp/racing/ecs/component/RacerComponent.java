@@ -17,15 +17,21 @@ public class RacerComponent implements Component {
 	private CheckpointComponent nextCheckpoint;
 
 	@Getter
-	private int score;
+	private float score;
+
+	private long checkpointStartTime;
 
 	public RacerComponent(CheckpointComponent nextCheckpoint) {
 		this.nextCheckpoint = nextCheckpoint;
+		checkpointStartTime = System.nanoTime();
 	}
 
 	public void passCheckpoint(CheckpointComponent checkpoint) {
+		long now = System.nanoTime();
+		float div = (float) ((now - checkpointStartTime) / 1e9);
+		score += 1 / div;
+		checkpointStartTime = now;
 		nextCheckpoint = checkpoint.getNextCheckpoint();
-		score++;
 	}
 
 	@Override
