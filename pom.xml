@@ -6,7 +6,7 @@
   	<packaging>pom</packaging>
 	<properties>
 		<lombok.version>1.18.6</lombok.version>
-		<log4j.version>2.11.2</log4j.version>
+		<log4j.version>2.16.0</log4j.version>
 		<lwjgl.version>3.2.1</lwjgl.version>
 		<joml.version>1.9.13</joml.version>
         <project.java.version>1.10</project.java.version>
